@@ -1,6 +1,13 @@
 package com.github.ryandens.delegation;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /** Decorates an abstract class (or interface?) with metadata to build an */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.SOURCE)
 public @interface AutoDelegate {
 
   /** @return the name of the field to delegate to */
