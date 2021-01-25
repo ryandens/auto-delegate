@@ -9,6 +9,8 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -16,6 +18,7 @@ import javax.lang.model.element.TypeElement;
 import java.util.Set;
 
 /** TODO */
+@SupportedSourceVersion(SourceVersion.RELEASE_15)
 @AutoService(Processor.class)
 public final class AutoDelegateProcessor extends AbstractProcessor {
 
@@ -31,7 +34,8 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
   @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final Set<? extends Element> autoDelegateElements = roundEnv.getElementsAnnotatedWith(AutoDelegate.class);
+    final Set<? extends Element> autoDelegateElements =
+        roundEnv.getElementsAnnotatedWith(AutoDelegate.class);
     return false;
   }
 
@@ -42,5 +46,10 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       final ExecutableElement member,
       final String userText) {
     return null;
+  }
+
+  @Override
+  public Set<String> getSupportedAnnotationTypes() {
+    return Set.of(AutoDelegate.class.getCanonicalName());
   }
 }
