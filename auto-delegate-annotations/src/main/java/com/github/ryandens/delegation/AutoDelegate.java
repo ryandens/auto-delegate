@@ -10,13 +10,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface AutoDelegate {
 
-  /** @return the name of the field to delegate to */
-  String value();
-
   /**
    * @return an array of interfaces that the generated class should delegate to. Note, for each
-   *     {@link Class} provided in this array, {@link Class#isAssignableFrom(Class)} must be true
-   *     where the parameterized class is the type of the field denoted by {@link #value()}
+   *     {@link Class} provided in this array, the class annotated by this {@link AutoDelegate}
+   *     element must be assignable from it (e.g. {@link Class#isAssignableFrom(Class)} must be true
+   *     because the annotated {@link Class} implements the {@link Class} specified in this array
    */
   Class<?>[] apisToDelegate();
 }

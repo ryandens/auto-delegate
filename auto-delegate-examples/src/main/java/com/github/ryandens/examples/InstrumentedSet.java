@@ -13,9 +13,7 @@ import java.util.Set;
  *
  * @param <E>
  */
-@AutoDelegate(
-    value = "inner",
-    apisToDelegate = {Set.class})
+@AutoDelegate(apisToDelegate = {Set.class})
 public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> implements Set<E> {
   private int addCount;
 
