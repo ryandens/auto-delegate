@@ -1,5 +1,6 @@
 package com.github.ryandens.delegation;
 
+import com.google.auto.common.MoreTypes;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -53,62 +54,84 @@ final class AutoDelegateWriter {
 
   void write() {
 
-    final var methodSpecs =
-        apisToDelegate.stream()
-            .map(
-                executableElement -> {
-                  final var parameters =
-                      executableElement.getParameters().stream()
-                          .map(parameter -> parameter.getSimpleName().toString())
-                          .reduce((s, s2) -> s + "," + s2)
-                          .orElse("");
-
-                  final String returnPrefix;
-                  if (TypeKind.VOID.equals(executableElement.getReturnType().getKind())) {
-                    returnPrefix = "";
-                  } else {
-                    returnPrefix = "return ";
-                  }
-
-                  return MethodSpec.overriding(executableElement)
-                      .addCode(
-                          CodeBlock.builder()
-                              .addStatement(
-                                  returnPrefix
-                                      + "inner."
-                                      + executableElement.getSimpleName().toString()
-                                      + "("
-                                      + parameters
-                                      + ")")
-                              .build())
-                      .build();
-                })
+    final var innerField =
+        FieldSpec.builder(TypeName.get(innerType), "inner", Modifier.FINAL, Modifier.PRIVATE)
+            .build();
+    // Get the TypeVariables from the innerType
+    final var typeVariables =
+        MoreTypes.asTypeElement(innerType).getTypeParameters().stream()
+            .map(TypeVariableName::get)
             .collect(Collectors.toSet());
+    // creates a MethodSpec for the constructor that takes an instance of type innerType and
+    // assigns it to a field with name "inner"
+    final var constructor =
+        MethodSpec.constructorBuilder()
+            .addParameter(TypeName.get(innerType), "inner", Modifier.FINAL)
+            .addCode(CodeBlock.builder().add("this.inner = inner;").build())
+            .build();
+    // create MethodSpecs for the apisToDelegate
+    final Set<MethodSpec> methodSpecs = delegatingMethodSpecs();
 
+    // creates a TypeSpec for an abstract auto-delegating implementation of innerType
     final var autoDelegator =
         TypeSpec.classBuilder(className)
-            .addJavadoc("TODO")
-            .addSuperinterface(innerType)
-            .addMethod(
-                MethodSpec.constructorBuilder()
-                    .addParameter(TypeName.get(innerType), "inner", Modifier.FINAL)
-                    .addCode(CodeBlock.builder().add("this.inner = inner;").build())
-                    .build())
-            .addTypeVariable(TypeVariableName.get("E"))
-            .addMethods(methodSpecs)
-            .addField(
-                FieldSpec.builder(
-                        TypeName.get(innerType), "inner", Modifier.FINAL, Modifier.PRIVATE)
-                    .build())
             .addModifiers(Modifier.ABSTRACT)
+            .addJavadoc(
+                "Shallowly immutable, shallowly thread-safe abstract class that forwards to an inner composed {@link "
+                    + innerType.toString()
+                    + "}")
+            .addSuperinterface(innerType)
+            .addTypeVariables(typeVariables)
+            .addField(innerField)
+            .addMethod(constructor)
+            .addMethods(methodSpecs)
             .build();
 
+    // Creates a JavaFile in the destination package with the autoDelegator TypeSpec
     final var javaFile = JavaFile.builder(destinationPackage, autoDelegator).build();
     try {
+      // Write the JavaFile to the local environment
       javaFile.writeTo(filer);
     } catch (IOException e) {
       throw new UncheckedIOException(
           "Problem writing " + destinationPackage + "." + className + " class to file", e);
     }
+  }
+
+  /**
+   * @return a {@link Set} of {@link MethodSpec}s that delegate {@link #apisToDelegate} to an inner
+   *     composed {@link #innerType}
+   */
+  private Set<MethodSpec> delegatingMethodSpecs() {
+    return apisToDelegate.stream()
+        .map(
+            executableElement -> {
+              final var parameters =
+                  executableElement.getParameters().stream()
+                      .map(parameter -> parameter.getSimpleName().toString())
+                      .reduce((s, s2) -> s + "," + s2)
+                      .orElse("");
+
+              final String returnPrefix;
+              if (TypeKind.VOID.equals(executableElement.getReturnType().getKind())) {
+                returnPrefix = "";
+              } else {
+                returnPrefix = "return ";
+              }
+
+              return MethodSpec.overriding(executableElement)
+                  .addCode(
+                      CodeBlock.builder()
+                          .addStatement(
+                              returnPrefix
+                                  + "inner."
+                                  + executableElement.getSimpleName().toString()
+                                  + "("
+                                  + parameters
+                                  + ")")
+                          .build())
+                  .build();
+            })
+        .collect(Collectors.toSet());
   }
 }
