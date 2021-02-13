@@ -9,9 +9,14 @@ import java.util.Set;
  * Inspired by Effective Java Item 16's composition example. Joshua Bloch creates an abstract
  * "ForwardingSet" that can be re-used to make composition of behavior for {@link Set} APIs more
  * easy. {@link AutoDelegate} obviates the need for a common "Forwarding Set" implementation
- * allowing it to be generated for each {@link Set} implementation we want to write
+ * allowing it to be generated for each {@link Set} implementation we want to write.
  *
- * @param <E>
+ * <p>Note, for now a limitation of {@link AutoDelegate} is that the type parameter name on the
+ * concrete class must match the type parameter name from the abstract interface. In this case that
+ * means the type parameter for {@link InstrumentedSet<E>} must be named {@code "E"} in order to
+ * generate a valid AutoDelegating abstract class
+ *
+ * @param <E> type of the element in the {@link Set}
  */
 @AutoDelegate(apisToDelegate = {Set.class})
 public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> implements Set<E> {
