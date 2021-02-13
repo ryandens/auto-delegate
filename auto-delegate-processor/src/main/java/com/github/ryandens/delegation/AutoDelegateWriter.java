@@ -11,21 +11,17 @@ import com.squareup.javapoet.TypeVariableName;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Set;
-import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 final class AutoDelegateWriter {
   private final Filer filer;
   private final String destinationPackage;
   private final String className;
-  //  private final String fieldName;
-  //  private final TypeMirror declaringType;
   private final Set<ExecutableElement> apisToDelegate;
   private final TypeMirror innerType;
 
@@ -35,17 +31,9 @@ final class AutoDelegateWriter {
       final String className,
       final Set<ExecutableElement> apisToDelegate,
       final TypeMirror innerType) {
-
-    //
-    //      final String fieldName,
-    //      final List<Class<?>> apisToDelegate,
-    //      final TypeMirror declaringType) {
-    //    this.fieldName = fieldName;
-    //    this.declaringType = declaringType;
     this.filer = filer;
     this.destinationPackage = destinationPackage;
     this.className = className;
-
     this.apisToDelegate = apisToDelegate;
     this.innerType = innerType;
   }
@@ -70,9 +58,6 @@ final class AutoDelegateWriter {
                   }
 
                   return MethodSpec.overriding(executableElement)
-                      //                        .addTypeVariable(TypeVariableName.get("T"))
-                      //
-                      // .addCode(CodeBlock.builder().add("System.out.println(\"foo\");").build())
                       .addCode(
                           CodeBlock.builder()
                               .addStatement(
@@ -97,7 +82,6 @@ final class AutoDelegateWriter {
                     .addCode(CodeBlock.builder().add("this.inner = inner;").build())
                     .build())
             .addTypeVariable(TypeVariableName.get("E"))
-            //                .superclass(ParameterizedTypeName.get(declaringType))
             .addMethods(methodSpecs)
             .addField(
                 FieldSpec.builder(
