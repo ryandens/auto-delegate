@@ -13,3 +13,12 @@ allprojects {
         }
     }
 }
+
+subprojects {
+    spotless {
+        // all subprojects must apply the java plugin
+        java {
+            googleJavaFormat("1.9")
+        }
+    }
+}

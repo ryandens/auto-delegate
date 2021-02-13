@@ -1,9 +1,13 @@
 package com.github.ryandens.delegation;
 
+import static com.google.auto.common.AnnotationMirrors.getAnnotationValue;
+
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import com.google.auto.service.AutoService;
-
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -19,11 +23,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.google.auto.common.AnnotationMirrors.getAnnotationValue;
 
 /** TODO */
 @AutoService(Processor.class)

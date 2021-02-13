@@ -8,16 +8,15 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Uses {@link com.squareup.javapoet} to write the class file that can be used to {@link

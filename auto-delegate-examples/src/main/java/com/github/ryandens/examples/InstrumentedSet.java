@@ -1,7 +1,6 @@
 package com.github.ryandens.examples;
 
 import com.github.ryandens.delegation.AutoDelegate;
-
 import java.util.Collection;
 import java.util.Set;
 
