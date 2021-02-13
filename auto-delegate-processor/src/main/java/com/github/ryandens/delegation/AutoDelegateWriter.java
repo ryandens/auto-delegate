@@ -51,8 +51,11 @@ final class AutoDelegateWriter {
     this.innerType = innerType;
   }
 
+  /**
+   * Builds the {@link TypeSpec} for the APIs specified by {@link AutoDelegate#apisToDelegate()} and
+   * writes the {@link JavaFile} to the provided {@link Filer}
+   */
   void write() {
-
     final var innerField =
         FieldSpec.builder(TypeName.get(innerType), "inner", Modifier.FINAL, Modifier.PRIVATE)
             .build();
