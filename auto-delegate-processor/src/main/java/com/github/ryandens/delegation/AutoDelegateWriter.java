@@ -18,6 +18,10 @@ import java.io.UncheckedIOException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Uses {@link com.squareup.javapoet} to write the class file that can be used to {@link
+ * AutoDelegate} APIs
+ */
 final class AutoDelegateWriter {
   private final Filer filer;
   private final String destinationPackage;
@@ -25,6 +29,15 @@ final class AutoDelegateWriter {
   private final Set<ExecutableElement> apisToDelegate;
   private final TypeMirror innerType;
 
+  /**
+   * @param filer for writing generated source code to the local environment
+   * @param destinationPackage where the Java class should be written to
+   * @param className of the generated Java class
+   * @param apisToDelegate abstract APIs that should automatically delegate to an inner composed
+   *     instance
+   * @param innerType the {@link TypeMirror} of the composed instance. This Type must have apis that
+   *     match all elements in {@link #apisToDelegate}
+   */
   AutoDelegateWriter(
       final Filer filer,
       final String destinationPackage,
