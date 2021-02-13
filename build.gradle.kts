@@ -21,4 +21,5 @@ subprojects {
             googleJavaFormat("1.9")
         }
     }
+    group = "com.ryandens.auto.delegate"
 }
