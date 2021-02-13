@@ -2,6 +2,7 @@ package com.github.ryandens.examples;
 
 import com.github.ryandens.delegation.AutoDelegate;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -10,23 +11,32 @@ import java.util.Set;
  * easy. {@link AutoDelegate} obviates the need for a common "Forwarding Set" implementation
  * allowing it to be generated for each {@link Set} implementation we want to write
  *
- * @param <T>
+ * @param <E>
  */
 @AutoDelegate(
     value = "inner",
     apisToDelegate = {Set.class})
-public abstract class InstrumentedSet<T> implements Set<T> {
-  private final Set<T> inner;
+public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> implements Set<E> {
   private int addCount;
 
-  public InstrumentedSet(final Set<T> inner) {
-    this.inner = inner;
+  public InstrumentedSet(final Set<E> inner) {
+    super(inner);
     this.addCount = 0;
   }
 
   @Override
-  public boolean add(final T t) {
+  public boolean add(final E t) {
     addCount++;
-    return inner.add(t);
+    return super.add(t);
+  }
+
+  @Override
+  public boolean addAll(final Collection<? extends E> c) {
+    addCount += c.size();
+    return super.addAll(c);
+  }
+
+  public int addCount() {
+    return addCount;
   }
 }
