@@ -22,4 +22,5 @@ subprojects {
         }
     }
     group = "com.ryandens.auto.delegate"
+    version = "0.1.0"
 }
