@@ -1,4 +1,5 @@
 # AutoDelegate
+![Build](https://github.com/ryandens/auto-delegate/workflows/Build/badge.svg?branch=main)
 
 Java annotation processor for automatically delegating interface APIs to a composed instance of that interface. This
 project was inspired by Google's <a href="https://github.com/google/auto">auto</a> project and leverages utilities
