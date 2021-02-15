@@ -1,6 +1,7 @@
 plugins {
     id("com.diffplug.spotless") version "5.10.1"
     id("nebula.publish-verification") version "17.3.2" apply false
+    id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
 }
 
 allprojects {
@@ -14,6 +15,15 @@ allprojects {
     spotless {
         kotlinGradle {
             ktlint()
+        }
+    }
+}
+
+nexusPublishing {
+    packageGroup.set("com.ryandens")
+    repositories {
+        sonatype {
+            stagingProfileId.set("31cb749c34629")
         }
     }
 }

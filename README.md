@@ -113,3 +113,14 @@ public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> im
 While this is not as concise as the Kotlin implementation, it generates a class called `AutoDelegate_InstrumentedSet` in
 the same package as the declaring class. The declared class can then extend the generated class and call `super`
 APIs where appropriate, only overriding methods that are relevant to the implementation
+
+
+## Internals
+
+### 🚀 Releasing
+
+1. Make sure the `sonatypeUsername` and `sonatypePassword` properties are set.
+1. `./gradlew build publishNebulaPublicationToSonatypeRepository closeAndReleaseStagingRepository`
+
+Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `getStagingProfile` diagnostic task
+with the `gradle-nexus-staging-plugin` - it's unclear how to get it with the new plugin.
