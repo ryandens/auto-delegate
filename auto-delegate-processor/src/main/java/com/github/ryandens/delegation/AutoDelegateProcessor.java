@@ -54,9 +54,9 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
                   () ->
                       new IllegalStateException(
                           "element should always be annotated with AutoDelegate"));
-      // From the AnnotationMirror, get the value of AutoDelegate#apisToDelegate and translate it
-      // into a Set<Element>
-      final var apisToDelegate = getApisToDelegateFromAnnotationMirror(annotationMirror);
+      // From the AnnotationMirror, get the value of AutoDelegate#value and translate it
+      // into an Element
+      final var apisToDelegate = getInterfaceToDelegateAsElement(annotationMirror);
       // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
       // interface that is also specified as the delegation target in AutoDelegate#value
       final var type =
@@ -107,11 +107,8 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
     return Set.of(AutoDelegate.class.getCanonicalName());
   }
 
-  /**
-   * Returns the contents of a {@code Class[]}-typed "value" field in a given {@code
-   * annotationMirror}.
-   */
-  private Element getApisToDelegateFromAnnotationMirror(AnnotationMirror annotationMirror) {
+  /** Returns the contents of {@link AutoDelegate#value()} as an {@link Element} */
+  private Element getInterfaceToDelegateAsElement(AnnotationMirror annotationMirror) {
     return getAnnotationValue(annotationMirror, "value")
         .accept(
             new SimpleAnnotationValueVisitor8<Element, Void>() {

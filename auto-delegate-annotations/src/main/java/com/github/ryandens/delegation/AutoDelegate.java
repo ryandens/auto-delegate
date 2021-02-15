@@ -43,7 +43,7 @@ import java.lang.annotation.Target;
  * InstrumentedSet} implementation written with {@code AutoDelegate} is
  *
  * <pre>{@code
- * @AutoDelegate(apisToDelegate = {Set.class})
+ * @AutoDelegate(Set.class)
  * public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> implements Set<E> {
  *   private int addCount;
  *
@@ -80,10 +80,9 @@ import java.lang.annotation.Target;
 public @interface AutoDelegate {
 
   /**
-   * @return an array of interfaces that the generated class should delegate to. Note, for each
-   *     {@link Class} provided in this array, the class annotated by this {@link AutoDelegate}
-   *     element must be assignable from it (e.g. {@link Class#isAssignableFrom(Class)} must be true
-   *     because the annotated {@link Class} implements the {@link Class} specified in this array
+   * @return an interface that the generated class should delegate to via an inner composed
+   *     instance. Note,the class annotated by this {@link AutoDelegate} element must be assignable
+   *     from the class provided in this annotation.
    */
   Class<?> value();
 }
