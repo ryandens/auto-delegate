@@ -14,4 +14,4 @@ jobs:
         with:
           java-version: 15
       - name: ✅ Build + Test
-        run: ./gradlew build
+        run: ./gradlew --no-daemon build
