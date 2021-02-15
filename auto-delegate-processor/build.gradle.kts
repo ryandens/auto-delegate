@@ -1,8 +1,8 @@
 plugins {
     `java-library`
     id("com.github.johnrengelman.shadow") version ("6.1.0")
-    id("nebula.maven-publish") version ("17.3.2")
-    id("nebula.maven-shadow-publish") version ("17.3.2")
+    id("nebula.maven-publish")
+    id("nebula.maven-shadow-publish")
 }
 
 java {

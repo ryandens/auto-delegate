@@ -1,5 +1,6 @@
 plugins {
     id("com.diffplug.spotless") version "5.10.1"
+    id("nebula.publish-verification") version "17.3.2" apply false
 }
 
 allprojects {
@@ -7,6 +8,7 @@ allprojects {
         mavenCentral()
     }
     apply(plugin = "com.diffplug.spotless")
+    apply(plugin = "nebula.publish-verification")
     spotless {
         kotlinGradle {
             ktlint()
