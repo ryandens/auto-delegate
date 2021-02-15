@@ -12,6 +12,8 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -27,6 +29,7 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor8;
  * implementation of an interface.
  */
 @AutoService(Processor.class)
+@SupportedSourceVersion(SourceVersion.RELEASE_15)
 public final class AutoDelegateProcessor extends AbstractProcessor {
 
   private Filer filer;

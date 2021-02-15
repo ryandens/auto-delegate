@@ -8,7 +8,8 @@ auto-common</a>.
 
 ## Usage
 
-In a Gradle project
+Requirements: 
+- JDK 11 or above
 
 ```kotlin
 dependencies {
@@ -116,6 +117,9 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 
 
 ## Internals
+
+### 👩‍💻 Development Requirements
+- JDK 15
 
 ### 🚀 Releasing
 
