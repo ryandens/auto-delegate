@@ -9,5 +9,5 @@ java {
 
 dependencies {
     compileOnly(project(":auto-delegate-annotations"))
-    annotationProcessor(project(":auto-delegate-processor"))
+    annotationProcessor(project(":auto-delegate-processor", "shadow"))
 }

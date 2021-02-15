@@ -1,10 +1,23 @@
 plugins {
     `java-library`
+    id("com.github.johnrengelman.shadow") version ("6.1.0")
+    id("nebula.maven-publish") version ("17.3.2")
+    id("nebula.maven-shadow-publish") version ("17.3.2")
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_15
     targetCompatibility = JavaVersion.VERSION_15
+}
+
+tasks.jar {
+    enabled = false
+}
+
+tasks {
+    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+        relocate("com.google.auto.common", "com.ryandens.delegation.shaded.auto.common")
+    }
 }
 
 dependencies {
