@@ -1,4 +1,4 @@
-package com.github.ryandens.delegation;
+package com.ryandens.delegation;
 
 import static com.google.auto.common.AnnotationMirrors.getAnnotationValue;
 

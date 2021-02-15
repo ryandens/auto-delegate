@@ -1,6 +1,6 @@
-package com.github.ryandens.examples;
+package com.ryandens.delegation.examples;
 
-import com.github.ryandens.delegation.AutoDelegate;
+import com.ryandens.delegation.AutoDelegate;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;

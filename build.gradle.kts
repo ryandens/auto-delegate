@@ -25,7 +25,7 @@ subprojects {
             googleJavaFormat("1.9")
         }
     }
-    group = "com.ryandens.auto.delegate"
+    group = "com.ryandens"
     version = "0.1.0"
 
     this.extensions.getByType<nebula.plugin.contacts.ContactsExtension>().run {

@@ -1,4 +1,4 @@
-package com.github.ryandens.examples;
+package com.ryandens.delegation.examples;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.same;

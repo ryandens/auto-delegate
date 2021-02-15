@@ -1,4 +1,4 @@
-package com.github.ryandens.delegation;
+package com.ryandens.delegation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package com.github.ryandens.delegation;
+package com.ryandens.delegation;
 
 import com.google.auto.common.MoreTypes;
 import com.squareup.javapoet.CodeBlock;
