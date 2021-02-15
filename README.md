@@ -1,5 +1,9 @@
 # AutoDelegate
-Java annotation processor for automatically delegating interface APIs to a composed instance of that interface
+
+Java annotation processor for automatically delegating interface APIs to a composed instance of that interface. This
+project was inspired by Google's <a href="https://github.com/google/auto">auto</a> project and leverages utilities
+exposed in <a href="https://github.com/google/auto/tree/master/common">
+auto-common</a>.
 
 ## Usage
 
@@ -39,8 +43,6 @@ final class Derived extends AutoDelegate_Derived implements Base {
 }
 
 ```
-
-
 
 ## Why?
 
