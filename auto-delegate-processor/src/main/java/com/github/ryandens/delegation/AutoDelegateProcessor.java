@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -22,21 +21,23 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
-/** TODO */
+/**
+ * Annotation processor that generates abstract classes that delegate to an inner composed
+ * implementation of an interface.
+ */
 @AutoService(Processor.class)
 public final class AutoDelegateProcessor extends AbstractProcessor {
 
   private Filer filer;
-  private Messager messager;
-  private ProcessingEnvironment processingEnv;
+  private Elements elementUtils;
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
     filer = processingEnv.getFiler();
-    messager = processingEnv.getMessager();
-    this.processingEnv = processingEnv;
+    elementUtils = processingEnv.getElementUtils();
   }
 
   @Override
@@ -72,7 +73,7 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       // From the type we are auto-delegating to find all abstract ExecutableElements defined on the
       // interface and collect them into a set of ExecutableElements
       final var memberElements =
-          processingEnv.getElementUtils().getAllMembers((TypeElement) type.asElement()).stream()
+          elementUtils.getAllMembers((TypeElement) type.asElement()).stream()
               .filter(
                   typeElementMember -> typeElementMember.getModifiers().contains(Modifier.ABSTRACT))
               .filter(typeElementMember -> typeElementMember instanceof ExecutableElement)
