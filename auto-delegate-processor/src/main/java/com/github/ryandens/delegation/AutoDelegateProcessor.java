@@ -5,7 +5,6 @@ import static com.google.auto.common.AnnotationMirrors.getAnnotationValue;
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import com.google.auto.service.AutoService;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
@@ -14,7 +13,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -59,16 +57,27 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       // From the AnnotationMirror, get the value of AutoDelegate#apisToDelegate and translate it
       // into a Set<Element>
       final var apisToDelegate = getApisToDelegateFromAnnotationMirror(annotationMirror);
-      // from the Element annotated with AutoDelegate, get their declared interfaces. Find all the
-      // interfaces that are declared on the class that are also specified as delegation targets in
-      // AutoDelegate#apisToDelegate
+      // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
+      // interface that is also specified as the delegation target in AutoDelegate#value
       final var type =
           (((TypeElement) element)
               .getInterfaces().stream()
                   .map(typeMirror -> (DeclaredType) typeMirror)
-                  .filter(declaredType -> apisToDelegate.contains(declaredType.asElement()))
-                  .findFirst() // TODO for now, only one interface to auto-delegate is supported
-                  .get());
+                  .filter(declaredType -> apisToDelegate.equals(declaredType.asElement()))
+                  .collect(
+                      Collectors.collectingAndThen(
+                          Collectors.toList(),
+                          list -> {
+                            if (list.size() == 0) {
+                              throw new IllegalArgumentException(
+                                  "No interfaces declared on the class match the element specified in AutoDelegate#value");
+                            } else if (list.size() > 1) {
+                              throw new IllegalStateException(
+                                  "Multiple interfaces declared on the class match the element specified in AutoDelegate#value");
+                            } else {
+                              return list.get(0);
+                            }
+                          })));
 
       // From the type we are auto-delegating to find all abstract ExecutableElements defined on the
       // interface and collect them into a set of ExecutableElements
@@ -102,20 +111,13 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
    * Returns the contents of a {@code Class[]}-typed "value" field in a given {@code
    * annotationMirror}.
    */
-  private Set<Element> getApisToDelegateFromAnnotationMirror(AnnotationMirror annotationMirror) {
-    return getAnnotationValue(annotationMirror, "apisToDelegate")
+  private Element getApisToDelegateFromAnnotationMirror(AnnotationMirror annotationMirror) {
+    return getAnnotationValue(annotationMirror, "value")
         .accept(
-            new SimpleAnnotationValueVisitor8<Set<Element>, Void>() {
+            new SimpleAnnotationValueVisitor8<Element, Void>() {
               @Override
-              public Set<Element> visitType(TypeMirror typeMirror, Void v) {
-                return Set.of(MoreTypes.asDeclared(typeMirror).asElement());
-              }
-
-              @Override
-              public Set<Element> visitArray(List<? extends AnnotationValue> values, Void v) {
-                return values.stream()
-                    .flatMap(value -> value.accept(this, null).stream())
-                    .collect(Collectors.toSet());
+              public Element visitType(TypeMirror typeMirror, Void v) {
+                return MoreTypes.asDeclared(typeMirror).asElement();
               }
             },
             null);

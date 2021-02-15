@@ -85,5 +85,5 @@ public @interface AutoDelegate {
    *     element must be assignable from it (e.g. {@link Class#isAssignableFrom(Class)} must be true
    *     because the annotated {@link Class} implements the {@link Class} specified in this array
    */
-  Class<?>[] apisToDelegate();
+  Class<?> value();
 }

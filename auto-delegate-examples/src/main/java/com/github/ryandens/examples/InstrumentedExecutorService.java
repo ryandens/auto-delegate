@@ -14,8 +14,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Thread-safe {@link ExecutorService} implementation that counts the number of jobs that the
  * composed {@link ExecutorService} must execute
+ *
+ * <p>Thread-safe
  */
-@AutoDelegate(apisToDelegate = {ExecutorService.class})
+@AutoDelegate(ExecutorService.class)
 public final class InstrumentedExecutorService extends AutoDelegate_InstrumentedExecutorService
     implements ExecutorService {
 

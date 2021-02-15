@@ -15,9 +15,11 @@ import java.util.Set;
  * means the type parameter for {@link InstrumentedSet<E>} must be named {@code "E"} in order to
  * generate a valid AutoDelegating abstract class
  *
+ * <p>Not thread-safe
+ *
  * @param <E> type of the element in the {@link Set}
  */
-@AutoDelegate(apisToDelegate = {Set.class})
+@AutoDelegate(Set.class)
 public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> implements Set<E> {
   private int addCount;
 
