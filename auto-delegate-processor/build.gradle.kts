@@ -9,6 +9,10 @@ plugins {
     id("nebula.maven-apache-license")
 }
 
+description = """
+    Annotation processor that generates auto-delegating abstract implementations of interfaces.
+""".trimIndent()
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
