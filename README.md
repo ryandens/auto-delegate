@@ -8,6 +8,8 @@ project was inspired by Google's <a href="https://github.com/google/auto">auto</
 exposed in <a href="https://github.com/google/auto/tree/master/common">
 auto-common</a>.
 
+Intro blog post: [https://www.ryandens.com/post/auto_delegate/](https://www.ryandens.com/post/auto_delegate/)
+
 ## Usage
 
 Requirements:
