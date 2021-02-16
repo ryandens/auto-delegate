@@ -124,7 +124,7 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 ### 🚀 Releasing
 
 1. Make sure the `sonatypeUsername` and `sonatypePassword` properties are set.
-1. `./gradlew build publishNebulaPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository`
+1. `./gradlew build signNebulaPublication publishNebulaPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository`
 
 Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `getStagingProfile` diagnostic task
 with the `gradle-nexus-staging-plugin` - it's unclear how to get it with the new plugin.

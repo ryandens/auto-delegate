@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    signing
     id("com.github.johnrengelman.shadow") version ("6.1.0")
     id("nebula.maven-shadow-publish")
     id("nebula.maven-publish")
@@ -7,6 +8,10 @@ plugins {
     id("nebula.maven-scm")
     id("nebula.maven-developer")
     id("nebula.maven-apache-license")
+}
+
+signing {
+    sign(publishing.publications["nebula"])
 }
 
 description = """
