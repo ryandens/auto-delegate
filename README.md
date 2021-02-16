@@ -1,5 +1,7 @@
 # AutoDelegate
+
 ![Build](https://github.com/ryandens/auto-delegate/workflows/Build/badge.svg?branch=main)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations/badge.svg#)](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations)
 
 Java annotation processor for automatically delegating interface APIs to a composed instance of that interface. This
 project was inspired by Google's <a href="https://github.com/google/auto">auto</a> project and leverages utilities
@@ -8,8 +10,11 @@ auto-common</a>.
 
 ## Usage
 
-Requirements: 
+Requirements:
+
 - JDK 11 or above
+
+### Gradle
 
 ```kotlin
 dependencies {
@@ -17,6 +22,44 @@ dependencies {
     annotationProcessor("com.ryandens", "auto-delegate-processor", "0.1.0")
 }
 ```
+
+### Maven
+
+```xml
+
+<project>
+    <dependencies>
+        <dependency>
+            <groupId>com.ryandens</groupId>
+            <artifactId>auto-delegate-annotations</artifactId>
+            <version>${auto-delegate.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.ryandens</groupId>
+                            <artifactId>auto-delegate-processor</artifactId>
+                            <version>${auto-delegate.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+### Simple example
+
+This simple example usage of `@AutoDelegate` is based off of the example given
+in [kotlin's delegation documentation](https://kotlinlang.org/docs/delegation.html). There are more examples in [auto-delegate-examples](./auto-delegate-examples/src/main/java/com/ryandens/delegation/examples)
 
 ```java
 public interface Base {
@@ -105,6 +148,9 @@ public final class InstrumentedSet<E> extends AutoDelegate_InstrumentedSet<E> im
         return super.addAll(c);
     }
 
+    /**
+     * @return the number of times a caller has attempted to add an item to this set
+     */
     public int addCount() {
         return addCount;
     }
@@ -115,10 +161,10 @@ While this is not as concise as the Kotlin implementation, it generates a class 
 the same package as the declaring class. The declared class can then extend the generated class and call `super`
 APIs where appropriate, only overriding methods that are relevant to the implementation
 
-
 ## Internals
 
 ### 👩‍💻 Development Requirements
+
 - JDK 15
 
 ### 🚀 Releasing
@@ -126,5 +172,5 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 1. Make sure the `sonatypeUsername` and `sonatypePassword` properties are set.
 1. `./gradlew build signNebulaPublication publishNebulaPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository`
 
-Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `getStagingProfile` diagnostic task
-with the `gradle-nexus-staging-plugin` - it's unclear how to get it with the new plugin.
+Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `getStagingProfile` diagnostic
+task with the `gradle-nexus-staging-plugin` - it's unclear how to get it with the new plugin.
