@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * This annotation strives to enable developers in the same fashion by generating abstract {@code
+ * <p>This annotation strives to enable developers in the same fashion by generating abstract {@code
  * Forwarding*} classes that delegate to the inner composed instance. An equivalent {@code
  * InstrumentedSet} implementation written with {@code AutoDelegate} is
  *
@@ -70,10 +70,15 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
- * While this is not as concise as the Kotlin implementation, it generates a class called {@code
+ * <p>While this is not as concise as the Kotlin implementation, it generates a class called {@code
  * AutoDelegate_InstrumentedSet} in the same package as the declaring class. The declared class can
  * then extend the generated class and call {code super} APIs where appropriate, only overriding
  * methods that are relevant to the implementation
+ *
+ * <p>In addition, this annotation supports targeting multiple interfaces for delegation rather than
+ * just one. This is useful when separating the responsibilities of a monolithic class into multiple
+ * separate classes with one responsibility, but still tying them all together via a single concrete
+ * instance.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
@@ -83,6 +88,19 @@ public @interface AutoDelegate {
    * @return an interface that the generated class should delegate to via an inner composed
    *     instance. Note,the class annotated by this {@link AutoDelegate} element must be assignable
    *     from the class provided in this annotation.
+   * @throws IllegalArgumentException if this array is not {@link Void#getClass()} and {@link #to()}
+   *     is not empty, meaning only one of these values should be specified in a usage of this
+   *     annotation
    */
-  Class<?> value();
+  Class<?> value() default void.class;
+
+  /**
+   * @return the interfaces that the generated class should delegate to via inner composes
+   *     instances. Note, the class annotated by this {@link AutoDelegate} annotation must be
+   *     assignable from each of the classes provided with this annotation.
+   * @throws IllegalArgumentException if this array is not empty and {@link #value()} is not {@link
+   *     Void#getClass()}, meaning only one of these values should be specified in a usage of this *
+   *     annotation
+   */
+  Class<?>[] to() default {};
 }
