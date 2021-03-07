@@ -29,10 +29,12 @@ nexusPublishing {
 }
 
 subprojects {
-    spotless {
-        // all subprojects must apply the java plugin
-        java {
-            googleJavaFormat("1.9")
+    if (project.plugins.hasPlugin(JavaPlugin::class.java)) {
+        spotless {
+            // all subprojects must apply the java plugin
+            java {
+                googleJavaFormat("1.9")
+            }
         }
     }
     group = "com.ryandens"
