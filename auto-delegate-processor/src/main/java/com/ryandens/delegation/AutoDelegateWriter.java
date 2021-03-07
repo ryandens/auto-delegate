@@ -10,6 +10,8 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
@@ -26,68 +28,56 @@ final class AutoDelegateWriter {
   private final Filer filer;
   private final String destinationPackage;
   private final String className;
-  private final Set<ExecutableElement> apisToDelegate;
-  private final TypeMirror innerType;
+  private final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap;
+  private final List<DelegationTargetDescriptor> delegationTargetDescriptorList;
 
   /**
    * @param filer for writing generated source code to the local environment
    * @param destinationPackage where the Java class should be written to
    * @param className of the generated Java class
-   * @param apisToDelegate abstract APIs that should automatically delegate to an inner composed
-   *     instance
-   * @param innerType the {@link TypeMirror} of the composed instance. This Type must have apis that
-   *     match all elements in {@link #apisToDelegate}
    */
   AutoDelegateWriter(
       final Filer filer,
       final String destinationPackage,
       final String className,
-      final Set<ExecutableElement> apisToDelegate,
-      final TypeMirror innerType) {
+      final List<DelegationTargetDescriptor> delegationTargetDescriptorList,
+      final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap) {
     this.filer = filer;
     this.destinationPackage = destinationPackage;
     this.className = className;
-    this.apisToDelegate = apisToDelegate;
-    this.innerType = innerType;
+    this.delegationTargetDescriptorList = delegationTargetDescriptorList;
+    this.typeToExecutablesMap = typeToExecutablesMap;
   }
 
-  /**
-   * Builds the {@link TypeSpec} for the APIs specified by {@link AutoDelegate#apisToDelegate()} and
-   * writes the {@link JavaFile} to the provided {@link Filer}
-   */
   void write() {
-    final var innerField =
-        FieldSpec.builder(TypeName.get(innerType), "inner", Modifier.FINAL, Modifier.PRIVATE)
-            .build();
-    // Get the TypeVariables from the innerType
-    final var typeVariables =
-        MoreTypes.asTypeElement(innerType).getTypeParameters().stream()
-            .map(TypeVariableName::get)
-            .collect(Collectors.toSet());
-    // creates a MethodSpec for the constructor that takes an instance of type innerType and
-    // assigns it to a field with name "inner"
-    final var constructor =
-        MethodSpec.constructorBuilder()
-            .addParameter(TypeName.get(innerType), "inner", Modifier.FINAL)
-            .addCode(CodeBlock.builder().add("this.inner = inner;").build())
-            .build();
-    // create MethodSpecs for the apisToDelegate
-    final Set<MethodSpec> methodSpecs = delegatingMethodSpecs();
-
-    // creates a TypeSpec for an abstract auto-delegating implementation of innerType
-    final var autoDelegator =
+    final var typeSpecBuilder =
         TypeSpec.classBuilder(className)
             .addModifiers(Modifier.ABSTRACT)
             .addJavadoc(
-                "Shallowly immutable, shallowly thread-safe abstract class that forwards to an inner composed {@link "
-                    + innerType.toString()
-                    + "}")
-            .addSuperinterface(innerType)
-            .addTypeVariables(typeVariables)
-            .addField(innerField)
-            .addMethod(constructor)
-            .addMethods(methodSpecs)
-            .build();
+                "Shallowly immutable, shallowly thread-safe abstract class that forwards to an inner composed types");
+    final var constructorBuilder = MethodSpec.constructorBuilder();
+    for (DelegationTargetDescriptor descriptor : delegationTargetDescriptorList) {
+      // creates a MethodSpec for the constructor that takes an instance of type innerType and
+      // assigns it to a field with name "inner"
+      constructorBuilder
+          .addParameter(
+              TypeName.get(descriptor.declaredType()), descriptor.fieldName(), Modifier.FINAL)
+          .addCode(
+              CodeBlock.builder()
+                  .add("this." + descriptor.fieldName() + "= " + descriptor.fieldName() + ";")
+                  .build());
+    }
+    typeSpecBuilder.addMethod(constructorBuilder.build());
+    for (Map.Entry<DelegationTargetDescriptor, Set<ExecutableElement>> entry :
+        typeToExecutablesMap.entrySet()) {
+      write(
+          entry.getKey().declaredType(),
+          entry.getValue(),
+          typeSpecBuilder,
+          entry.getKey().fieldName());
+    }
+
+    final var autoDelegator = typeSpecBuilder.build();
 
     // Creates a JavaFile in the destination package with the autoDelegator TypeSpec
     final var javaFile = JavaFile.builder(destinationPackage, autoDelegator).build();
@@ -101,10 +91,39 @@ final class AutoDelegateWriter {
   }
 
   /**
+   * Builds the {@link TypeSpec} for the APIs specified by {@link AutoDelegate#apisToDelegate()} and
+   * writes the {@link JavaFile} to the provided {@link Filer}
+   */
+  private void write(
+      final TypeMirror innerType,
+      final Set<ExecutableElement> apisToDelegate,
+      final TypeSpec.Builder typeSpecBuilder,
+      final String fieldName) {
+    final var innerField =
+        FieldSpec.builder(TypeName.get(innerType), fieldName, Modifier.FINAL, Modifier.PRIVATE)
+            .build();
+    // Get the TypeVariables from the innerType
+    final var typeVariables =
+        MoreTypes.asTypeElement(innerType).getTypeParameters().stream()
+            .map(TypeVariableName::get)
+            .collect(Collectors.toSet());
+
+    // create MethodSpecs for the apisToDelegate
+    final Set<MethodSpec> methodSpecs = delegatingMethodSpecs(apisToDelegate, fieldName);
+
+    typeSpecBuilder
+        .addSuperinterface(innerType)
+        .addTypeVariables(typeVariables)
+        .addField(innerField)
+        .addMethods(methodSpecs);
+  }
+
+  /**
    * @return a {@link Set} of {@link MethodSpec}s that delegate {@link #apisToDelegate} to an inner
    *     composed {@link #innerType}
    */
-  private Set<MethodSpec> delegatingMethodSpecs() {
+  private Set<MethodSpec> delegatingMethodSpecs(
+      final Set<ExecutableElement> apisToDelegate, final String fieldName) {
     return apisToDelegate.stream()
         .map(
             executableElement -> {
@@ -126,7 +145,8 @@ final class AutoDelegateWriter {
                       CodeBlock.builder()
                           .addStatement(
                               returnPrefix
-                                  + "inner."
+                                  + fieldName
+                                  + "."
                                   + executableElement.getSimpleName().toString()
                                   + "("
                                   + parameters
