@@ -8,47 +8,78 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.util.Elements;
 
 /**
- * Uses {@link com.squareup.javapoet} to write the class file that can be used to {@link
+ * Uses {@link com.squareup.javapoet} to create a {@link JavaFile} that can be used to {@link
  * AutoDelegate} APIs
  */
-final class AutoDelegateWriter {
-  private final Filer filer;
+final class AutoDelegateGenerator {
   private final String destinationPackage;
   private final String className;
   private final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap;
   private final List<DelegationTargetDescriptor> delegationTargetDescriptorList;
 
   /**
-   * @param filer for writing generated source code to the local environment
    * @param destinationPackage where the Java class should be written to
    * @param className of the generated Java class
+   * @param delegationTargetDescriptorList a {@link List} of {@link DelegationTargetDescriptor}s
+   *     that this class should delegate to
    */
-  AutoDelegateWriter(
-      final Filer filer,
+  AutoDelegateGenerator(
+      final Elements elementUtils,
       final String destinationPackage,
       final String className,
-      final List<DelegationTargetDescriptor> delegationTargetDescriptorList,
-      final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap) {
-    this.filer = filer;
-    this.destinationPackage = destinationPackage;
-    this.className = className;
-    this.delegationTargetDescriptorList = delegationTargetDescriptorList;
-    this.typeToExecutablesMap = typeToExecutablesMap;
+      final List<DelegationTargetDescriptor> delegationTargetDescriptorList) {
+    this.destinationPackage = Objects.requireNonNull(destinationPackage);
+    this.className = Objects.requireNonNull(className);
+    this.delegationTargetDescriptorList = Objects.requireNonNull(delegationTargetDescriptorList);
+    // For each type we are auto-delegating to find all abstract ExecutableElements defined on
+    // the interface and collect them into a Map, where the key is the DelegationTargetDescriptor
+    // and the value is the Set<ExecutableElement> that must be delegated to by that
+    // DelegationTargetDescriptor
+    this.typeToExecutablesMap =
+        delegationTargetDescriptorList.stream()
+            .map(
+                delegationTargetDescriptor ->
+                    // create an entry mapping a DelegationTargetDescriptor to a
+                    // Set<ExecutableElement>
+                    new AbstractMap.SimpleEntry<>(
+                        delegationTargetDescriptor,
+                        elementUtils
+                            // first get all the members for the delegation target
+                            .getAllMembers(
+                                (TypeElement) delegationTargetDescriptor.declaredType().asElement())
+                            .stream()
+                            // then, reduce it to only ExecutableElements
+                            .filter(
+                                typeElementMember -> typeElementMember instanceof ExecutableElement)
+                            // then, map the members to the required type we reduced the stream to
+                            .map(typeElementMember -> (ExecutableElement) typeElementMember)
+                            // then, reduce it to the abstract APIs that we're interested in
+                            // auto-delegating to
+                            .filter(
+                                typeElementMember ->
+                                    typeElementMember.getModifiers().contains(Modifier.ABSTRACT))
+                            // then, collect it into a Set<ExecutableElement> that the key
+                            // DelegationTargetDescriptor should delegate to
+                            .collect(Collectors.toSet())))
+            // finally, collect the Map entries into a map (how does Collectors.toMap() not alias
+            // Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)?!)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  void write() {
+  JavaFile autoDelegate() {
     final var typeSpecBuilder =
         TypeSpec.classBuilder(className)
             .addModifiers(Modifier.ABSTRACT)
@@ -104,14 +135,7 @@ final class AutoDelegateWriter {
     final var autoDelegator = typeSpecBuilder.build();
 
     // Creates a JavaFile in the destination package with the autoDelegator TypeSpec
-    final var javaFile = JavaFile.builder(destinationPackage, autoDelegator).build();
-    try {
-      // Write the JavaFile to the local environment
-      javaFile.writeTo(filer);
-    } catch (IOException e) {
-      throw new UncheckedIOException(
-          "Problem writing " + destinationPackage + "." + className + " class to file", e);
-    }
+    return JavaFile.builder(destinationPackage, autoDelegator).build();
   }
 
   /**
