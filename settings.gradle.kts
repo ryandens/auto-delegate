@@ -8,4 +8,9 @@
  */
 
 rootProject.name = "auto-delegate"
-include("auto-delegate-annotations", "auto-delegate-processor", "auto-delegate-examples")
+include(
+    "auto-delegate-annotations",
+    "auto-delegate-examples",
+    "auto-delegate-platform",
+    "auto-delegate-processor"
+)
