@@ -5,11 +5,11 @@ import static com.google.auto.common.AnnotationMirrors.getAnnotationValue;
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import com.google.auto.service.AutoService;
-import java.util.AbstractMap;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
@@ -21,8 +21,6 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -122,51 +120,21 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       mutableDelegationTargetDescriptors =
           null; // dereference to prevent accidental mutation or usage
 
-      // For each type we are auto-delegating to find all abstract ExecutableElements defined on
-      // the interface and collect them into a Map, where the key is the DelegationTargetDescriptor
-      // and the value is the Set<ExecutableElement> that must be delegated to by that
-      // DelegationTargetDescriptor
-      final var memberElementsMap =
-          delegationTargetDescriptors.stream()
-              .map(
-                  delegationTargetDescriptor ->
-                      // create an entry mapping a DelegationTargetDescriptor to a
-                      // Set<ExecutableElement>
-                      new AbstractMap.SimpleEntry<>(
-                          delegationTargetDescriptor,
-                          elementUtils
-                              // first get all the members for the delegation target
-                              .getAllMembers(
-                                  (TypeElement)
-                                      delegationTargetDescriptor.declaredType().asElement())
-                              .stream()
-                              // then, reduce it to only ExecutableElements
-                              .filter(
-                                  typeElementMember ->
-                                      typeElementMember instanceof ExecutableElement)
-                              // then, map the members to the required type we reduced the stream to
-                              .map(typeElementMember -> (ExecutableElement) typeElementMember)
-                              // then, reduce it to the abstract APIs that we're interested in
-                              // auto-delegating to
-                              .filter(
-                                  typeElementMember ->
-                                      typeElementMember.getModifiers().contains(Modifier.ABSTRACT))
-                              // then, collect it into a Set<ExecutableElement> that the key
-                              // DelegationTargetDescriptor should delegate to
-                              .collect(Collectors.toSet())))
-              // finally, collect the Map entries into a map (how does Collectors.toMap() not alias
-              // Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)?!)
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
       // Get the package of the element annotated with AutoDelegate, as the
       final var destinationPackageName =
           MoreElements.getPackage(element).getQualifiedName().toString();
-      new AutoDelegateWriter(
-              filer,
-              destinationPackageName,
-              "AutoDelegate_" + element.getSimpleName(),
-              delegationTargetDescriptors,
-              memberElementsMap)
-          .write();
+      final var className = "AutoDelegate_" + element.getSimpleName();
+      final var javaFile =
+          new AutoDelegateGenerator(
+                  elementUtils, destinationPackageName, className, delegationTargetDescriptors)
+              .autoDelegate();
+      try {
+        // Write the JavaFile to the local environment
+        javaFile.writeTo(filer);
+      } catch (IOException e) {
+        throw new UncheckedIOException(
+            "Problem writing " + destinationPackageName + "." + className + " class to file", e);
+      }
     }
     // always return false because we don't want to forbid other annotation processors from
     // operating on this type.
