@@ -65,19 +65,28 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       // From the AnnotationMirror, get the value of AutoDelegate#value and translate it
       // into an Element
       final var valueToDelegateField = getInterfaceToDelegateAsElement(annotationMirror);
+      // From the AnnotationMirror, get the value of AutoDelegate#to and translate it
+      // into a Set<Element>
       final var toDelegateSetField = getInterfacesToDelegateAsElementSet(annotationMirror);
 
+      // validate that one and only one of those options was specified to avoid confusing behavior
       if (valueToDelegateField == null && toDelegateSetField.isEmpty()) {
         throw new IllegalArgumentException("A delegation target must be provided");
       } else if (valueToDelegateField != null && !toDelegateSetField.isEmpty()) {
         throw new IllegalArgumentException(
             "Only one mechanism of supplying delegation targets should be used");
       }
+
+      // Since only one of valueToDelegateField/toDelegateSetField is not null or empty, if
+      // valueToDelegateField is not null map it to a singleton List. If it is null, then use the
+      // toDelegateSetField. Now we can proceed with our annotation processing without considering
+      // whether we are delegating to one inner composed instance or mulitple.
       final var apisToDelegate =
           valueToDelegateField != null ? List.of(valueToDelegateField) : toDelegateSetField;
-      // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
-      // interface that is also specified as the delegation target in AutoDelegate#value
 
+      // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
+      // interface that is also specified as specified as a delegation target via the AutoDelegate
+      // annotation
       final var types =
           (((TypeElement) element)
               .getInterfaces().stream()
@@ -85,42 +94,68 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
                   .filter(declaredType -> apisToDelegate.contains(declaredType.asElement()))
                   .collect(Collectors.toList()));
 
-      final var mutableDelegationTargetDescriptors = new LinkedList<DelegationTargetDescriptor>();
+      // Validate that we found a DeclaredType from the declaring element's list of
+      // interfaces for each type specified as a delegation target via the AutoDelegate annotation
+      if (types.size() != apisToDelegate.size()) {
+        throw new IllegalStateException(
+            "A mismatch between the number of interfaces found on the declaring class that correspond to the delegation targets specified via the AutoDelegate annotation. Are you sure your type implements all of the delegation targets?");
+      }
+
+      // iterate through the List<DeclaredType> and build a new List of DelegationTargetDescriptor.
+      // This is deliberately ordinal so that that we can consistently build a constructor with
+      // parameters in the same declared order on each build. We also need to forge an association
+      // between a DeclaredType and a String fieldName that will be used as the delegation target.
+      // This mapping would be an otherwise good candidate for Stream#map, except that we want to
+      // increment an index in order to guarantee unique field names for each type. It's generally
+      // not recommended to mutate shared state in Stream#map so we opt to do it more idiomatically
+      // in a for loop, collecting DelegationTargetDescriptors into a mutable LinkedList in the for
+      // loop before wrapping it in an unmodifiableList implementation and de-referencing the
+      // directly mutable LinkedList to prevent accidental mutations or usages
+      var mutableDelegationTargetDescriptors = new LinkedList<DelegationTargetDescriptor>();
       for (int i = 0; i < types.size(); i++) {
         mutableDelegationTargetDescriptors.add(
             new DelegationTargetDescriptor(types.get(i), "inner" + i));
       }
-
-      if (types.size() == 0) {
-        throw new IllegalArgumentException(
-            "No interfaces declared on the class match the element specified in AutoDelegate#value");
-      }
-
       final var delegationTargetDescriptors =
           Collections.unmodifiableList(mutableDelegationTargetDescriptors);
+      //noinspection UnusedAssignment
+      mutableDelegationTargetDescriptors =
+          null; // dereference to prevent accidental mutation or usage
 
-      // From each type we are auto-delegating to find all abstract ExecutableElements defined on
-      // the
-      // interface and collect them into a set of ExecutableElements
+      // For each type we are auto-delegating to find all abstract ExecutableElements defined on
+      // the interface and collect them into a Map, where the key is the DelegationTargetDescriptor
+      // and the value is the Set<ExecutableElement> that must be delegated to by that
+      // DelegationTargetDescriptor
       final var memberElementsMap =
           delegationTargetDescriptors.stream()
               .map(
                   delegationTargetDescriptor ->
+                      // create an entry mapping a DelegationTargetDescriptor to a
+                      // Set<ExecutableElement>
                       new AbstractMap.SimpleEntry<>(
                           delegationTargetDescriptor,
                           elementUtils
+                              // first get all the members for the delegation target
                               .getAllMembers(
                                   (TypeElement)
                                       delegationTargetDescriptor.declaredType().asElement())
                               .stream()
-                              .filter(
-                                  typeElementMember ->
-                                      typeElementMember.getModifiers().contains(Modifier.ABSTRACT))
+                              // then, reduce it to only ExecutableElements
                               .filter(
                                   typeElementMember ->
                                       typeElementMember instanceof ExecutableElement)
+                              // then, map the members to the required type we reduced the stream to
                               .map(typeElementMember -> (ExecutableElement) typeElementMember)
+                              // then, reduce it to the abstract APIs that we're interested in
+                              // auto-delegating to
+                              .filter(
+                                  typeElementMember ->
+                                      typeElementMember.getModifiers().contains(Modifier.ABSTRACT))
+                              // then, collect it into a Set<ExecutableElement> that the key
+                              // DelegationTargetDescriptor should delegate to
                               .collect(Collectors.toSet())))
+              // finally, collect the Map entries into a map (how does Collectors.toMap() not alias
+              // Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)?!)
               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
       // Get the package of the element annotated with AutoDelegate, as the
       final var destinationPackageName =
@@ -133,6 +168,8 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
               memberElementsMap)
           .write();
     }
+    // always return false because we don't want to forbid other annotation processors from
+    // operating on this type.
     return false;
   }
 
