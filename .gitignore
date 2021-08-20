@@ -3,6 +3,3 @@
 .idea
 # Ignore Gradle build output directory
 build/
-
-# ignore gradle properties as its a convenient place to put secrets while figuring out how to deploy to mavenCentral
-gradle.properties
