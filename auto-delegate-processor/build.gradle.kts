@@ -14,10 +14,6 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-tasks.jar {
-    enabled = false
-}
-
 tasks {
     named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
         relocate("com.google.auto.common", "com.ryandens.delegation.shaded.auto.common")
