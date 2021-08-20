@@ -1,5 +1,5 @@
 plugins {
-    id("com.diffplug.spotless") version "5.10.1"
+    id("com.diffplug.spotless") version "5.14.2"
     id("nebula.publish-verification") apply false
     id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
 }
@@ -32,7 +32,7 @@ subprojects {
     spotless {
         // all subprojects must apply the java plugin
         java {
-            googleJavaFormat("1.9")
+            googleJavaFormat("1.11.0")
         }
     }
     group = "com.ryandens"
