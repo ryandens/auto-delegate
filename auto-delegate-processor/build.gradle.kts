@@ -9,9 +9,12 @@ description = """
     Annotation processor that generates auto-delegating abstract implementations of interfaces.
 """.trimIndent()
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+tasks.compileJava {
+    options.release.set(11)
+}
+
+tasks.compileTestJava {
+    options.release.set(16)
 }
 
 tasks {

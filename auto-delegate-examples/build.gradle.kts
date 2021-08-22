@@ -2,9 +2,8 @@ plugins {
     java
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_16
-    targetCompatibility = JavaVersion.VERSION_16
+tasks.compileJava {
+    options.release.set(16)
 }
 
 dependencies {
