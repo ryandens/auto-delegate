@@ -20,8 +20,8 @@ Requirements:
 
 ```kotlin
 dependencies {
-    compileOnly("com.ryandens", "auto-delegate-annotations", "0.2.0")
-    annotationProcessor("com.ryandens", "auto-delegate-processor", "0.2.0")
+    compileOnly("com.ryandens", "auto-delegate-annotations", "0.2.1")
+    annotationProcessor("com.ryandens", "auto-delegate-processor", "0.2.1")
 }
 ```
 
@@ -167,7 +167,7 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 
 ### 👩‍💻 Development Requirements
 
-- JDK 15
+- JDK 16
 
 ### 🚀 Releasing
 
