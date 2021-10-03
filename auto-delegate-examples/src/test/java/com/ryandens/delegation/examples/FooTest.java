@@ -1,7 +1,10 @@
 package com.ryandens.delegation.examples;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,13 +13,14 @@ import org.junit.jupiter.api.Test;
 final class FooTest {
 
   private Foo foo;
+  private Baz innerComposedBaz;
 
   @BeforeEach
   void beforeEach() {
     // GIVEN a valid foo instance
     final var bar = mock(Bar.class);
-    final var baz = mock(Baz.class);
-    foo = new Foo(bar, baz);
+    innerComposedBaz = mock(Baz.class);
+    foo = new Foo(bar, innerComposedBaz);
   }
 
   /** Verifies that if we invoke {@link Foo#a()} */
@@ -76,5 +80,14 @@ final class FooTest {
         () -> {
           foo.a();
         });
+
+    // WHEN we invoke foo.g(), which has a default implementation defined on the interface Baz
+    final String g = foo.g();
+    // VERIFY the composed instance baz was delegated to, not the default implementation of the API
+    // inherited by Foo
+    verify(innerComposedBaz, times(1)).g();
+    // VERIFY g is null, what the mock implementation of Baz.g returns, rather than the string "g"
+    // what the default implementation of Baz.g returns
+    assertNull(g);
   }
 }
