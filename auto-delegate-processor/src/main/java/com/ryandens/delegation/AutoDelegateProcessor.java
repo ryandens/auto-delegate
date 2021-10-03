@@ -27,6 +27,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
+import javax.lang.model.util.Types;
 
 /**
  * Annotation processor that generates abstract classes that delegate to an inner composed
@@ -37,10 +38,12 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
 
   private Filer filer;
   private Elements elementUtils;
+  private Types typeUtils;
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
     filer = processingEnv.getFiler();
+    typeUtils = processingEnv.getTypeUtils();
     elementUtils = processingEnv.getElementUtils();
   }
 
@@ -126,7 +129,11 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       final var className = "AutoDelegate_" + element.getSimpleName();
       final var javaFile =
           new AutoDelegateGenerator(
-                  elementUtils, destinationPackageName, className, delegationTargetDescriptors)
+                  elementUtils,
+                  typeUtils,
+                  destinationPackageName,
+                  className,
+                  delegationTargetDescriptors)
               .autoDelegate();
       try {
         // Write the JavaFile to the local environment

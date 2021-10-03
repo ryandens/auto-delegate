@@ -19,6 +19,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * Uses {@link com.squareup.javapoet} to create a {@link JavaFile} that can be used to {@link
@@ -29,6 +30,7 @@ final class AutoDelegateGenerator {
   private final String className;
   private final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap;
   private final List<DelegationTargetDescriptor> delegationTargetDescriptorList;
+  private final Types typeUtils;
 
   /**
    * @param destinationPackage where the Java class should be written to
@@ -38,12 +40,14 @@ final class AutoDelegateGenerator {
    */
   AutoDelegateGenerator(
       final Elements elementUtils,
+      final Types typeUtils,
       final String destinationPackage,
       final String className,
       final List<DelegationTargetDescriptor> delegationTargetDescriptorList) {
     this.destinationPackage = Objects.requireNonNull(destinationPackage);
     this.className = Objects.requireNonNull(className);
     this.delegationTargetDescriptorList = Objects.requireNonNull(delegationTargetDescriptorList);
+    this.typeUtils = typeUtils;
     // For each type we are auto-delegating to find all abstract ExecutableElements defined on
     // the interface and collect them into a Map, where the key is the DelegationTargetDescriptor
     // and the value is the Set<ExecutableElement> that must be delegated to by that
@@ -126,7 +130,7 @@ final class AutoDelegateGenerator {
       // generate the delegation methods to the abstract APIs we want auto-delegations for,
       // utilizing
       // the fields created above and assigned in the constructor
-      final var methodSpecs = delegatingMethodSpecs(entry.getValue(), entry.getKey().fieldName());
+      final var methodSpecs = delegatingMethodSpecs(entry.getValue(), entry.getKey());
       // add those methods to the TypeSpec builder
       typeSpecBuilder.addMethods(methodSpecs);
     }
@@ -144,7 +148,7 @@ final class AutoDelegateGenerator {
    *     ExecutableElement} identified by the provided {@link String} field name
    */
   private Set<MethodSpec> delegatingMethodSpecs(
-      final Set<ExecutableElement> apisToDelegate, final String fieldName) {
+      final Set<ExecutableElement> apisToDelegate, final DelegationTargetDescriptor descriptor) {
     return apisToDelegate.stream()
         .map(
             executableElement -> {
@@ -161,12 +165,12 @@ final class AutoDelegateGenerator {
                 returnPrefix = "return ";
               }
 
-              return MethodSpec.overriding(executableElement)
+              return MethodSpec.overriding(executableElement, descriptor.declaredType(), typeUtils)
                   .addCode(
                       CodeBlock.builder()
                           .addStatement(
                               returnPrefix
-                                  + fieldName
+                                  + descriptor.fieldName()
                                   + "."
                                   + executableElement.getSimpleName().toString()
                                   + "("
