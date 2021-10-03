@@ -74,7 +74,10 @@ final class AutoDelegateGenerator {
                             // auto-delegating to
                             .filter(
                                 typeElementMember ->
-                                    typeElementMember.getModifiers().contains(Modifier.ABSTRACT))
+                                    typeElementMember.getModifiers().contains(Modifier.ABSTRACT)
+                                        || typeElementMember
+                                            .getModifiers()
+                                            .contains(Modifier.DEFAULT))
                             // then, collect it into a Set<ExecutableElement> that the key
                             // DelegationTargetDescriptor should delegate to
                             .collect(Collectors.toSet())))
