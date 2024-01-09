@@ -1,6 +1,6 @@
 # AutoDelegate
 
-![Build](https://github.com/ryandens/auto-delegate/workflows/Validate/badge.svg?branch=main)
+[![Validate](https://github.com/ryandens/auto-delegate/actions/workflows/gradle.yml/badge.svg?branch=main)](https://github.com/ryandens/auto-delegate/actions/workflows/gradle.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations/badge.svg#)](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations)
 
 Java annotation processor for automatically delegating interface APIs to a composed instance of that interface. This
