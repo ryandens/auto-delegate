@@ -36,7 +36,7 @@ subprojects {
         }
     }
     group = "com.ryandens"
-    version = "0.3.0"
+    version = "0.3.1"
 
     this.extensions.getByType<nebula.plugin.contacts.ContactsExtension>().run {
         addPerson(
