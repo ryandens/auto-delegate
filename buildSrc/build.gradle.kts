@@ -1,16 +1,15 @@
 plugins {
     `kotlin-dsl`
-    `java-gradle-plugin`
-    id("com.diffplug.spotless") version "5.10.1"
+    id("com.diffplug.spotless") version "6.23.3"
 }
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
-    implementation(kotlin("gradle-plugin"))
-    implementation("com.netflix.nebula", "nebula-publishing-plugin", "17.3.2")
+    implementation("com.netflix.nebula.maven-nebula-publish", "com.netflix.nebula.maven-nebula-publish.gradle.plugin", "21.0.0")
 }
 
 gradlePlugin {

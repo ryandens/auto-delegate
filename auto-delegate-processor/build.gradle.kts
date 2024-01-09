@@ -1,13 +1,14 @@
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow") version ("6.1.0")
-    id("nebula.maven-shadow-publish")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.netflix.nebula.maven-shadow-publish")
     id("com.ryandens.delegation.publish")
 }
 
-description = """
+description =
+    """
     Annotation processor that generates auto-delegating abstract implementations of interfaces.
-""".trimIndent()
+    """.trimIndent()
 
 tasks.compileJava {
     options.release.set(11)
