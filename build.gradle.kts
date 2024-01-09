@@ -1,7 +1,7 @@
 plugins {
-    id("com.diffplug.spotless") version "5.14.2"
-    id("nebula.publish-verification") apply false
-    id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
+    id("com.diffplug.spotless") version "6.23.3"
+    id("com.netflix.nebula.publish-verification") apply false
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 allprojects {
@@ -9,9 +9,9 @@ allprojects {
         mavenCentral()
     }
     apply(plugin = "com.diffplug.spotless")
-    apply(plugin = "nebula.publish-verification")
-    apply(plugin = "nebula.contacts")
-    apply(plugin = "nebula.info")
+    apply(plugin = "com.netflix.nebula.publish-verification")
+    apply(plugin = "com.netflix.nebula.contacts")
+    apply(plugin = "com.netflix.nebula.info")
     spotless {
         kotlinGradle {
             ktlint()
@@ -32,17 +32,20 @@ subprojects {
     spotless {
         // all subprojects must apply the java plugin
         java {
-            googleJavaFormat("1.11.0")
+            googleJavaFormat()
         }
     }
     group = "com.ryandens"
     version = "0.2.2"
 
     this.extensions.getByType<nebula.plugin.contacts.ContactsExtension>().run {
-        addPerson("admin@ryandens.com", delegateClosureOf<nebula.plugin.contacts.Contact> {
-            moniker("Ryan Dens")
-            role("owner")
-            github("ryandens")
-        })
+        addPerson(
+            "admin@ryandens.com",
+            delegateClosureOf<nebula.plugin.contacts.Contact> {
+                moniker("Ryan Dens")
+                role("owner")
+                github("ryandens")
+            },
+        )
     }
 }
