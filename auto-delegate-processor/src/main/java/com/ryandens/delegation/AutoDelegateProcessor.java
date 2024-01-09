@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -81,16 +82,25 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       // Since only one of valueToDelegateField/toDelegateSetField is not null or empty, if
       // valueToDelegateField is not null map it to a singleton List. If it is null, then use the
       // toDelegateSetField. Now we can proceed with our annotation processing without considering
-      // whether we are delegating to one inner composed instance or mulitple.
+      // whether we are delegating to one inner composed instance or multiple.
       final var apisToDelegate =
           valueToDelegateField != null ? List.of(valueToDelegateField) : toDelegateSetField;
 
       // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
-      // interface that is also specified as specified as a delegation target via the AutoDelegate
+      // interface that is also specified as a delegation target via the AutoDelegate
       // annotation
       final var types =
           (((TypeElement) element)
               .getInterfaces().stream()
+                  // also check supertypes
+                  .flatMap(
+                      declaredType ->
+                          Stream.concat(
+                              Stream.of(declaredType),
+                              typeUtils.directSupertypes(declaredType).stream()
+                                  .filter(
+                                      typeMirror ->
+                                          typeMirror.getKind().equals(TypeKind.DECLARED))))
                   .map(typeMirror -> (DeclaredType) typeMirror)
                   .filter(declaredType -> apisToDelegate.contains(declaredType.asElement()))
                   .collect(Collectors.toList()));
