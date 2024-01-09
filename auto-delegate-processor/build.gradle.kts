@@ -15,7 +15,7 @@ tasks.compileJava {
 }
 
 tasks.compileTestJava {
-    options.release.set(16)
+    options.release.set(17)
 }
 
 tasks {
