@@ -1,6 +1,6 @@
 # AutoDelegate
 
-![Build](https://github.com/ryandens/auto-delegate/workflows/Build/badge.svg?branch=main)
+![Build](https://github.com/ryandens/auto-delegate/workflows/Validate/badge.svg?branch=main)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations/badge.svg#)](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations)
 
 Java annotation processor for automatically delegating interface APIs to a composed instance of that interface. This
@@ -167,11 +167,12 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 
 ### 👩‍💻 Development Requirements
 
-- JDK 16
+- JDK 17
 
 ### 🚀 Releasing
 
 1. Make sure the `sonatypeUsername` and `sonatypePassword` properties are set.
+1. Make sure the `signing.keyId`, `signing.password`, and `signing.secretKeyRingFile` properties are set.
 1. `./gradlew build signNebulaPublication publishNebulaPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository`
 
 Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `getStagingProfile` diagnostic
