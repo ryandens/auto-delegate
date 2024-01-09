@@ -175,5 +175,5 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 1. Make sure the `signing.keyId`, `signing.password`, and `signing.secretKeyRingFile` properties are set.
 1. `./gradlew build signNebulaPublication publishNebulaPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository`
 
-Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `getStagingProfile` diagnostic
-task with the `gradle-nexus-staging-plugin` - it's unclear how to get it with the new plugin.
+Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `retrieveSonatypeStagingProfile` 
+diagnostic task of the `io.github.gradle-nexus.publish-plugin`
