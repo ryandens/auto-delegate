@@ -3,6 +3,10 @@ on:
   check_run:
     types: [completed]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     name: "Publish Sonar JSON to Pixee"
@@ -13,8 +17,20 @@ jobs:
 
       - name: "Publish Sonar JSON to Pixee"
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         run: |
-          echo $(curl -v "https://sonarcloud.io/api/issues/search?componentKeys=ryandens_auto-delegate&pullRequest=${{ github.event.check_run.pull_requests[0].number }}")
-          echo "${{ github.event.check_run.pull_requests[0].head.sha }}"
-          echo "2: ${{ github.event.check_run.head_sha }}"
+          PR_NUMBER=${{ join(github.event.check_run.pull_requests.*.number, '') }}
+          URL="https://sonarcloud.io/api/issues/search?componentKeys=ryandens_auto-delegate"
+          
+          if [ -n "$PR_NUMBER" ]; then
+            URL="${URL}&pullRequest=$PR_NUMBER"
+          fi
+
+          curl -v "$URL" -o sonar_issues.json
+          cat sonar_issues.json
+          ANALYSIS_SHA=${{ github.event.check_run.head_sha }}
+          SECRET=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://app.pixee.ai" | jq -j '.value')
+          API_RESPONSE=$(curl -v -X PUT -H "Authorization: Bearer $SECRET" -H "Content-Type: multipart/form-data" -F "file=@sonar_issues.json" "https://p6uk7e1qya.execute-api.us-east-1.amazonaws.com/prod/analysis-input/ryandens/auto-delegate/$ANALYIS_SHA/sonar")
+          echo "$API_RESPONSE"
