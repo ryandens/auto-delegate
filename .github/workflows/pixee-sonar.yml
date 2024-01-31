@@ -39,5 +39,5 @@ jobs:
         if : ${{ toJson(github.event.check_run.pull_requests) != '[]' }}
         run: |
           SECRET=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://app.pixee.ai" | jq -j '.value')
-          API_RESPONSE=$(curl -v -X POST -H "Authorization: Bearer $SECRET" -H "Content-Type: multipart/form-data" -F "file=@sonar_issues.json" "https://p6uk7e1qya.execute-api.us-east-1.amazonaws.com/prod/analysis-input/ryandens/auto-delegate/${{ github.event.check_run.pull_requests[0].number }}")
+          API_RESPONSE=$(curl -v -X POST -H "Authorization: Bearer $SECRET" "https://p6uk7e1qya.execute-api.us-east-1.amazonaws.com/prod/analysis-input/ryandens/auto-delegate/${{ github.event.check_run.pull_requests[0].number }}")
           echo $API_RESPONSE
