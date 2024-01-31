@@ -32,5 +32,5 @@ jobs:
           cat sonar_issues.json
           ANALYSIS_SHA=${{ github.event.check_run.head_sha }}
           SECRET=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://app.pixee.ai" | jq -j '.value')
-          API_RESPONSE=$(curl -v -X PUT -H "Authorization: Bearer $SECRET" -H "Content-Type: multipart/form-data" -F "file=@sonar_issues.json" "https://p6uk7e1qya.execute-api.us-east-1.amazonaws.com/prod/analysis-input/ryandens/auto-delegate/$ANALYIS_SHA/sonar")
+          API_RESPONSE=$(curl -v -X PUT -H "Authorization: Bearer $SECRET" -H "Content-Type: multipart/form-data" -F "file=@sonar_issues.json" "https://p6uk7e1qya.execute-api.us-east-1.amazonaws.com/prod/analysis-input/ryandens/auto-delegate/$ANALYSIS_SHA/sonar")
           echo "$API_RESPONSE"
