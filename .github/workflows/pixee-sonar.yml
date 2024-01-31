@@ -1,8 +1,7 @@
 name: "Publish Sonar JSON to Pixee"
 on:
-  check_run:
-    types:
-      - completed
+  check_suite:
+    types: [completed]
 
 jobs:
   publish:
