@@ -1,7 +1,5 @@
 name: "Publish Sonar JSON to Pixee"
 on:
-  check_suite:
-    types: [completed]
   check_run:
     types: [completed]
 
@@ -9,6 +7,7 @@ jobs:
   publish:
     name: "Publish Sonar JSON to Pixee"
     runs-on: ubuntu-latest
+    if: ${{ github.event.check_run.name == 'SonarCloud Code Analysis'}}
     steps:
       - uses: actions/checkout@v4
 
