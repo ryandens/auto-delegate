@@ -12,9 +12,6 @@ jobs:
 
       - name: "Publish Sonar JSON to Pixee"
         shell: bash
-        working-directory: ./cbioportal
-        env:
-          GH_PR_NUMBER: ${{ github.event.number }}
 
         run: |
-          echo $(curl -v "https://sonarcloud.io/api/issues/search?componentKeys=ryandens_auto-delegate&pullRequest=${GH_PR_NUMBER}")
+          echo $(curl -v "https://sonarcloud.io/api/issues/search?componentKeys=ryandens_auto-delegate&pullRequest=24")
