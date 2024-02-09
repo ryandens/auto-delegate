@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.processing.AbstractProcessor;
@@ -40,17 +41,20 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
   private Filer filer;
   private Elements elementUtils;
   private Types typeUtils;
+  private int myIntegerValue;
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
     filer = processingEnv.getFiler();
     typeUtils = processingEnv.getTypeUtils();
     elementUtils = processingEnv.getElementUtils();
+    myIntegerValue = Integer.valueOf("3").intValue();
   }
 
   @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    logger.info(String.format("Processing AutoDelegate annotations %d", myIntegerValue));
     final Set<? extends Element> autoDelegateElements =
         roundEnv.getElementsAnnotatedWith(AutoDelegate.class);
     //
@@ -209,4 +213,6 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
             },
             null);
   }
+
+  private static final Logger logger = Logger.getLogger(AutoDelegateProcessor.class.getName());
 }
