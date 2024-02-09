@@ -40,17 +40,20 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
   private Filer filer;
   private Elements elementUtils;
   private Types typeUtils;
+  private int myIntegerValue;
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
     filer = processingEnv.getFiler();
     typeUtils = processingEnv.getTypeUtils();
     elementUtils = processingEnv.getElementUtils();
+    myIntegerValue = Integer.valueOf("2").intValue();
   }
 
   @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    System.out.println(myIntegerValue);
     final Set<? extends Element> autoDelegateElements =
         roundEnv.getElementsAnnotatedWith(AutoDelegate.class);
     //
