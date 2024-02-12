@@ -47,7 +47,7 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
     filer = processingEnv.getFiler();
     typeUtils = processingEnv.getTypeUtils();
     elementUtils = processingEnv.getElementUtils();
-    myIntegerValue = Integer.valueOf("3").intValue();
+    myIntegerValue = Integer.parseInt("3");
   }
 
   @Override
