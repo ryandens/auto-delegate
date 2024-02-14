@@ -1,0 +1,4 @@
+additional_codemods:
+  - pixee:java/correct-logger-factory
+
+issues_dashboard: true
