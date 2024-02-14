@@ -1,4 +1,5 @@
 additional_codemods:
   - pixee:java/correct-logger-factory
+  - sonar:java/overrides-match-synchronization-s3551
 
 issues_dashboard: true
