@@ -99,7 +99,7 @@ final class AutoDelegateGenerator {
       final var typeVariables =
           MoreTypes.asTypeElement(descriptor.declaredType()).getTypeParameters().stream()
               .map(TypeVariableName::get)
-              .collect(Collectors.toSet());
+              .collect(Collectors.toUnmodifiableList());
       typeSpecBuilder.addTypeVariables(typeVariables);
 
       //  implement the specified interface for this delegation target
