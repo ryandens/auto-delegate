@@ -13,45 +13,45 @@ class InstrumentedMapTest {
 
     @BeforeEach
     void beforeEach() {
-        // GIVEN an instrumented Set<String>
+        // GIVEN an instrumented Map<String>
         instrumentedMap = new InstrumentedMap<>(new HashMap<>());
     }
 
     @Test
-    void testInitialAddCount() {
-        // VERIFY initial addCount is 0
+    void testInitialPutCount() {
+        // VERIFY initial putCount is 0
         assertEquals(0, instrumentedMap.putCount());
     }
 
     /**
-     * Tests that the {@link InstrumentedSet#add} implementation functions properly
+     * Tests that the {@link InstrumentedMap#put} implementation functions properly
      */
     @Test
     void testPut() {
-        // WHEN we add an element to the Set
+        // WHEN we add an element to the Map
         instrumentedMap.put("foo", "!");
-        // VERIFY the addCount is now 1
+        // VERIFY the putCount is now 1
         assertEquals(1, instrumentedMap.putCount());
-        // WHEN we add an element to the Set again
+        // WHEN we add an element to the Map again
         instrumentedMap.put("bar", "!!");
-        // VERIFY the addCount is now 2
+        // VERIFY the putCount is now 2
         assertEquals(2, instrumentedMap.putCount());
-        // WHEN we add an element to the Set again that is already in the Set
+        // WHEN we add an element to the Map again that is already in the Map
         instrumentedMap.put("foo", "!!!");
-        // VERIFY the addCount is now 3
+        // VERIFY the putCount is now 3
         assertEquals(3, instrumentedMap.putCount());
         // VERIFY size is 2
         assertEquals(2, instrumentedMap.size());
     }
 
     /**
-     * Tests that the {@link InstrumentedSet#addAll} implementation functions properly
+     * Tests that the {@link InstrumentedMap#putAll} implementation functions properly
      */
     @Test
     void testPutALl() {
-        // WHEN we use addAll to add two elements to the Set
+        // WHEN we use putAll to add two elements to the Map
         instrumentedMap.putAll(Map.of("k1", "v1", "k2", "v2"));
-        // VERIFY the addCount is now 2
+        // VERIFY the putCount is now 2
         assertEquals(2, instrumentedMap.putCount());
     }
 }
