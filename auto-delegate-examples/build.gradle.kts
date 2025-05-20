@@ -11,7 +11,7 @@ dependencies {
     annotationProcessor(project(":auto-delegate-processor", "shadow"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.mockito:mockito-core:5.17.0")
+    testImplementation("org.mockito:mockito-core:5.18.0")
 }
 
 tasks.test {
