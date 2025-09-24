@@ -1,5 +1,5 @@
 plugins {
-    id("com.diffplug.spotless") version "7.2.1"
+    id("com.diffplug.spotless") version "8.0.0"
     id("com.netflix.nebula.publish-verification") apply false
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
