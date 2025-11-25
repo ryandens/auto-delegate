@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.netflix.nebula.maven-nebula-publish", "com.netflix.nebula.maven-nebula-publish.gradle.plugin", "22.1.0")
+    implementation("com.netflix.nebula.maven-nebula-publish", "com.netflix.nebula.maven-nebula-publish.gradle.plugin", "22.2.0")
 }
 
 gradlePlugin {
