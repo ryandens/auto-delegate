@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "9.3.0"
     id("com.netflix.nebula.maven-shadow-publish")
     id("com.ryandens.delegation.publish")
 }
