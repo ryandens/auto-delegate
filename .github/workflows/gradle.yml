@@ -23,5 +23,8 @@ jobs:
         with:
           dependency-graph: generate-and-submit
 
+      - name: Setup TestLens
+        uses: testlens-app/setup-testlens@v1
+
       - name: Execute Gradle build
         run: ./gradlew build
