@@ -31,4 +31,10 @@ dependencies {
     val autoServiceVersion = "1.1.1"
     compileOnly("com.google.auto.service", "auto-service-annotations", autoServiceVersion)
     annotationProcessor("com.google.auto.service", "auto-service", autoServiceVersion)
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
