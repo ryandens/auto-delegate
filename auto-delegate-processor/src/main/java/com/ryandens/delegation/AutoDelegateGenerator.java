@@ -8,16 +8,18 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import java.util.AbstractMap;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -28,8 +30,8 @@ import javax.lang.model.util.Types;
 final class AutoDelegateGenerator {
   private final String destinationPackage;
   private final String className;
-  private final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap;
   private final List<DelegationTargetDescriptor> delegationTargetDescriptorList;
+  private final Elements elementUtils;
   private final Types typeUtils;
 
   /**
@@ -47,43 +49,8 @@ final class AutoDelegateGenerator {
     this.destinationPackage = Objects.requireNonNull(destinationPackage);
     this.className = Objects.requireNonNull(className);
     this.delegationTargetDescriptorList = Objects.requireNonNull(delegationTargetDescriptorList);
+    this.elementUtils = elementUtils;
     this.typeUtils = typeUtils;
-    // For each type we are auto-delegating to find all abstract ExecutableElements defined on
-    // the interface and collect them into a Map, where the key is the DelegationTargetDescriptor
-    // and the value is the Set<ExecutableElement> that must be delegated to by that
-    // DelegationTargetDescriptor
-    this.typeToExecutablesMap =
-        delegationTargetDescriptorList.stream()
-            .map(
-                delegationTargetDescriptor ->
-                    // create an entry mapping a DelegationTargetDescriptor to a
-                    // Set<ExecutableElement>
-                    new AbstractMap.SimpleEntry<>(
-                        delegationTargetDescriptor,
-                        elementUtils
-                            // first get all the members for the delegation target
-                            .getAllMembers(
-                                (TypeElement) delegationTargetDescriptor.declaredType().asElement())
-                            .stream()
-                            // then, reduce it to only ExecutableElements
-                            .filter(
-                                typeElementMember -> typeElementMember instanceof ExecutableElement)
-                            // then, map the members to the required type we reduced the stream to
-                            .map(typeElementMember -> (ExecutableElement) typeElementMember)
-                            // then, reduce it to the abstract APIs that we're interested in
-                            // auto-delegating to
-                            .filter(
-                                typeElementMember ->
-                                    typeElementMember.getModifiers().contains(Modifier.ABSTRACT)
-                                        || typeElementMember
-                                            .getModifiers()
-                                            .contains(Modifier.DEFAULT))
-                            // then, collect it into a Set<ExecutableElement> that the key
-                            // DelegationTargetDescriptor should delegate to
-                            .collect(Collectors.toSet())))
-            // finally, collect the Map entries into a map (how does Collectors.toMap() not alias
-            // Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)?!)
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   JavaFile autoDelegate() {
@@ -128,12 +95,12 @@ final class AutoDelegateGenerator {
     // build the constructor and add it to the MethodSpec
     typeSpecBuilder.addMethod(constructorBuilder.build());
 
-    for (Map.Entry<DelegationTargetDescriptor, Set<ExecutableElement>> entry :
-        typeToExecutablesMap.entrySet()) {
+    for (DelegationTargetDescriptor descriptor : delegationTargetDescriptorList) {
       // generate the delegation methods to the abstract APIs we want auto-delegations for,
-      // utilizing
-      // the fields created above and assigned in the constructor
-      final var methodSpecs = delegatingMethodSpecs(entry.getValue(), entry.getKey());
+      // utilizing the fields created above and assigned in the constructor
+      final var methodSpecs =
+          delegatingMethodSpecs(
+              apisToDelegate(MoreTypes.asTypeElement(descriptor.declaredType())), descriptor);
       // add those methods to the TypeSpec builder
       typeSpecBuilder.addMethods(methodSpecs);
     }
@@ -146,12 +113,50 @@ final class AutoDelegateGenerator {
   }
 
   /**
-   * @return a {@link Set} of {@link MethodSpec}s that delegate to an inner composed implementation
-   *     of the {@link javax.lang.model.type.DeclaredType} for the corresponding {@link
-   *     ExecutableElement} identified by the provided {@link String} field name
+   * Finds all abstract and default methods of the provided delegation target, including those
+   * inherited from superinterfaces. The methods are returned in declaration order, with methods
+   * declared on a type before those of its superinterfaces, so that the generated source is the
+   * same on each build.
+   *
+   * @return a {@link List} of {@link ExecutableElement}s that must be delegated to
    */
-  private Set<MethodSpec> delegatingMethodSpecs(
-      final Set<ExecutableElement> apisToDelegate, final DelegationTargetDescriptor descriptor) {
+  private List<ExecutableElement> apisToDelegate(final TypeElement delegationTarget) {
+    final var declarationOrder = new HashMap<ExecutableElement, Integer>();
+    indexInDeclarationOrder(delegationTarget, declarationOrder);
+    return ElementFilter.methodsIn(elementUtils.getAllMembers(delegationTarget)).stream()
+        .filter(
+            method ->
+                method.getModifiers().contains(Modifier.ABSTRACT)
+                    || method.getModifiers().contains(Modifier.DEFAULT))
+        .sorted(
+            Comparator.comparingInt(
+                method -> declarationOrder.getOrDefault(method, Integer.MAX_VALUE)))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Assigns an index to each method declared on the provided type and then on its superinterfaces,
+   * depth first in declaration order. A method reachable by more than one path keeps its first
+   * index.
+   */
+  private static void indexInDeclarationOrder(
+      final TypeElement type, final Map<ExecutableElement, Integer> declarationOrder) {
+    for (final ExecutableElement method : ElementFilter.methodsIn(type.getEnclosedElements())) {
+      declarationOrder.putIfAbsent(method, declarationOrder.size());
+    }
+    for (final TypeMirror superinterface : type.getInterfaces()) {
+      indexInDeclarationOrder(MoreTypes.asTypeElement(superinterface), declarationOrder);
+    }
+  }
+
+  /**
+   * @return a {@link List} of {@link MethodSpec}s, in the order of the provided {@link
+   *     ExecutableElement}s, that delegate to an inner composed implementation of the {@link
+   *     javax.lang.model.type.DeclaredType} for the corresponding {@link ExecutableElement}
+   *     identified by the provided {@link String} field name
+   */
+  private List<MethodSpec> delegatingMethodSpecs(
+      final List<ExecutableElement> apisToDelegate, final DelegationTargetDescriptor descriptor) {
     return apisToDelegate.stream()
         .map(
             executableElement -> {
@@ -182,6 +187,8 @@ final class AutoDelegateGenerator {
                           .build())
                   .build();
             })
-        .collect(Collectors.toSet());
+        // a method inherited from more than one superinterface is generated identically for each
+        .distinct()
+        .collect(Collectors.toList());
   }
 }
