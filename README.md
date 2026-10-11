@@ -1,7 +1,7 @@
 # AutoDelegate
 
 [![Validate](https://github.com/ryandens/auto-delegate/actions/workflows/gradle.yml/badge.svg?branch=main)](https://github.com/ryandens/auto-delegate/actions/workflows/gradle.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations/badge.svg#)](https://maven-badges.herokuapp.com/maven-central/com.ryandens/auto-delegate-annotations)
+![Maven Central Version](https://img.shields.io/maven-central/v/com.ryandens/auto-delegate-processor)
 
 Java annotation processor for automatically delegating interface APIs to a composed instance of that interface. This
 project was inspired by Google's <a href="https://github.com/google/auto">auto</a> project and leverages utilities
