@@ -20,8 +20,8 @@ Requirements:
 
 ```kotlin
 dependencies {
-    compileOnly("com.ryandens", "auto-delegate-annotations", "0.4.0")
-    annotationProcessor("com.ryandens", "auto-delegate-processor", "0.4.0")
+    annotationProcessor("com.ryandens:auto-delegate-processor:0.4.0")
+    compileOnly("com.ryandens:auto-delegate-annotations:0.4.0")
 }
 ```
 
