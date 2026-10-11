@@ -85,6 +85,8 @@ import java.lang.annotation.Target;
 public @interface AutoDelegate {
 
   /**
+   * Specifies the single interface to delegate to.
+   *
    * @return an interface that the generated class should delegate to via an inner composed
    *     instance. Note,the class annotated by this {@link AutoDelegate} element must be assignable
    *     from the class provided in this annotation.
@@ -95,6 +97,8 @@ public @interface AutoDelegate {
   Class<?> value() default void.class;
 
   /**
+   * Specifies multiple interfaces to delegate to.
+   *
    * @return the interfaces that the generated class should delegate to via inner composes
    *     instances. Note, the class annotated by this {@link AutoDelegate} annotation must be
    *     assignable from each of the classes provided with this annotation.

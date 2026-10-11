@@ -19,7 +19,6 @@ import org.gradle.plugins.signing.SigningPlugin
  * Configures projects for publishing to Maven Central.
  */
 class AutoDelegatePublishingPlugin : Plugin<Project> {
-
     override fun apply(target: Project) {
         // apply all the necessary plugins for making the artifact acceptable to Sonatype
         target.apply {
@@ -34,7 +33,12 @@ class AutoDelegatePublishingPlugin : Plugin<Project> {
 
         // sign the publication produced by the Nebula MavenPublishPlugin
         target.configure<SigningExtension> {
-            sign(target.extensions.getByType<PublishingExtension>().publications.getByName("nebula"))
+            sign(
+                target.extensions
+                    .getByType<PublishingExtension>()
+                    .publications
+                    .getByName("nebula"),
+            )
         }
     }
 }

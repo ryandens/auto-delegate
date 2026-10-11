@@ -37,6 +37,9 @@ import javax.lang.model.util.Types;
 @AutoService(Processor.class)
 public final class AutoDelegateProcessor extends AbstractProcessor {
 
+  /** Creates an annotation processor for auto-delegating implementations. */
+  public AutoDelegateProcessor() {}
+
   private Filer filer;
   private Elements elementUtils;
   private Types typeUtils;

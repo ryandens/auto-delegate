@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,35 +21,35 @@ final class AutoDelegateProcessorTest {
     final var source = directory.resolve("Example.java");
     Files.writeString(
         source,
-        """
-        package example;
-
-        import com.ryandens.delegation.AutoDelegate;
-
-        interface First {
-          void zebra();
-          default int middle() { return 1; }
-          void alpha();
-          void alpha(int value);
-          static void ignored() {}
-        }
-
-        interface Left {
-          void shared();
-        }
-
-        interface Right {
-          void shared();
-        }
-
-        interface Second extends Left, Right {
-          void yellow();
-          void beta();
-        }
-
-        @AutoDelegate(to = {Second.class, First.class})
-        abstract class Example implements First, Second {}
-        """);
+        String.join(
+            "\n",
+            "package example;",
+            "",
+            "import com.ryandens.delegation.AutoDelegate;",
+            "",
+            "interface First {",
+            "  void zebra();",
+            "  default int middle() { return 1; }",
+            "  void alpha();",
+            "  void alpha(int value);",
+            "  static void ignored() {}",
+            "}",
+            "",
+            "interface Left {",
+            "  void shared();",
+            "}",
+            "",
+            "interface Right {",
+            "  void shared();",
+            "}",
+            "",
+            "interface Second extends Left, Right {",
+            "  void yellow();",
+            "  void beta();",
+            "}",
+            "",
+            "@AutoDelegate(to = {Second.class, First.class})",
+            "abstract class Example implements First, Second {}"));
     final var compiler = ToolProvider.getSystemJavaCompiler();
     final var diagnostics = new StringWriter();
     try (final var fileManager = compiler.getStandardFileManager(null, null, null)) {
@@ -57,7 +58,7 @@ final class AutoDelegateProcessorTest {
               diagnostics,
               fileManager,
               null,
-              List.of("-d", directory.toString(), "-s", directory.toString()),
+              List.of("--release", "11", "-d", directory.toString(), "-s", directory.toString()),
               null,
               fileManager.getJavaFileObjects(source.toFile()));
       task.setProcessors(List.of(new AutoDelegateProcessor()));
@@ -70,7 +71,7 @@ final class AutoDelegateProcessorTest {
             .matcher(generated)
             .results()
             .map(match -> match.group(1))
-            .toList();
+            .collect(Collectors.toList());
     assertEquals(
         List.of(
             "zebra()", "middle()", "alpha()", "alpha(int value)", "shared()", "yellow()", "beta()"),
