@@ -33,6 +33,13 @@ class AutoDelegatePublishingPlugin : Plugin<Project> {
 
         // sign the publication produced by the Nebula MavenPublishPlugin
         target.configure<SigningExtension> {
+            val signingKey = target.providers.gradleProperty("signingKey").orNull
+            if (signingKey != null) {
+                useInMemoryPgpKeys(
+                    signingKey,
+                    target.providers.gradleProperty("signingPassword").orNull,
+                )
+            }
             sign(
                 target.extensions
                     .getByType<PublishingExtension>()

@@ -7,7 +7,12 @@ nexusPublishing {
     packageGroup.set("com.ryandens")
     repositories {
         sonatype {
-            stagingProfileId.set("31cb749c34629")
+            // Let the plugin discover the profile for com.ryandens on the new service;
+            // the previous numeric stagingProfileId belonged to the retired OSSRH service.
+            // Sonatype's Central publishing endpoints for the Nexus plugin:
+            // https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuring-your-plugin
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
     }
 }
