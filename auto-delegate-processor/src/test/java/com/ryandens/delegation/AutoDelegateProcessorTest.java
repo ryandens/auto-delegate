@@ -17,8 +17,10 @@ final class AutoDelegateProcessorTest {
   @TempDir Path directory;
 
   @Test
+  @SuppressWarnings("java:S6204") // Stream.toList() is unavailable with --release 11.
   void generatesMethodsInInterfaceAndMethodDeclarationOrder() throws Exception {
     final var source = directory.resolve("Example.java");
+    // Text blocks require Java 15; the test sources also compile with --release 11.
     Files.writeString(
         source,
         String.join(

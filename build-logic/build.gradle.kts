@@ -26,6 +26,7 @@ dependencies {
 }
 
 gradlePlugin {
+    // Registers the existing binary publishing plugin so the included build can resolve its ID.
     plugins {
         register("auto-delegate-publish") {
             id = "com.ryandens.delegation.publish"

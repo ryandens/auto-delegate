@@ -38,7 +38,10 @@ import javax.lang.model.util.Types;
 public final class AutoDelegateProcessor extends AbstractProcessor {
 
   /** Creates an annotation processor for auto-delegating implementations. */
-  public AutoDelegateProcessor() {}
+  public AutoDelegateProcessor() {
+    // Service loading requires a public no-arg constructor; init supplies the processing
+    // environment.
+  }
 
   private Filer filer;
   private Elements elementUtils;
@@ -52,6 +55,8 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
   }
 
   @Override
+  @SuppressWarnings(
+      "java:S6204") // Stream.toList() requires Java 16; this processor targets Java 11.
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     final Set<? extends Element> autoDelegateElements =
@@ -203,6 +208,7 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
               }
 
               @Override
+              @SuppressWarnings("java:S6204") // Stream.toList() is unavailable with --release 11.
               public List<Element> visitArray(
                   final List<? extends AnnotationValue> values, final Void unused) {
                 return values.stream()
