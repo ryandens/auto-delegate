@@ -30,9 +30,7 @@ build behavior; `gradle/libs.versions.toml` owns dependency versions.
 ### Signing key in 1Password
 
 The existing Maven signing key is stored in the **Private** vault as
-**Maven Central signing key** (item ID `pwnmdwkz7bgkxlqjhhflzjos7u`). Its fingerprint is
-`3248202EE69438B28A3F5DBC62731B5459631CF8`, matching the signing key used for
-AutoDelegate `0.3.1`, with identity `Ryan Dens <ryandens735@gmail.com>`.
+**Maven Central signing key**.
 
 The `private key` field contains the complete ASCII-armored private key encrypted
 with AES-256; the `passphrase` field contains its generated export passphrase.
@@ -46,8 +44,8 @@ this setup:
 
 ```sh
 set -o pipefail
-op read 'op://Private/pwnmdwkz7bgkxlqjhhflzjos7u/private key' | gh secret set MAVEN_SIGNING_KEY --env maven-central --repo ryandens/auto-delegate
-op read 'op://Private/pwnmdwkz7bgkxlqjhhflzjos7u/passphrase' | gh secret set MAVEN_SIGNING_PASSWORD --env maven-central --repo ryandens/auto-delegate
+op read 'op://Private/{item id}/private key' | gh secret set MAVEN_SIGNING_KEY --env maven-central --repo ryandens/auto-delegate
+op read 'op://Private/{item id}/passphrase' | gh secret set MAVEN_SIGNING_PASSWORD --env maven-central --repo ryandens/auto-delegate
 ```
 
 Ensure the public key remains available on a
