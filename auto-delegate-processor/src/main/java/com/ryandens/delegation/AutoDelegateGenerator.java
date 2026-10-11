@@ -9,10 +9,10 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import java.util.AbstractMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -28,7 +28,7 @@ import javax.lang.model.util.Types;
 final class AutoDelegateGenerator {
   private final String destinationPackage;
   private final String className;
-  private final Map<DelegationTargetDescriptor, Set<ExecutableElement>> typeToExecutablesMap;
+  private final Map<DelegationTargetDescriptor, List<ExecutableElement>> typeToExecutablesMap;
   private final List<DelegationTargetDescriptor> delegationTargetDescriptorList;
   private final Types typeUtils;
 
@@ -50,14 +50,14 @@ final class AutoDelegateGenerator {
     this.typeUtils = typeUtils;
     // For each type we are auto-delegating to find all abstract ExecutableElements defined on
     // the interface and collect them into a Map, where the key is the DelegationTargetDescriptor
-    // and the value is the Set<ExecutableElement> that must be delegated to by that
+    // and the value is the List<ExecutableElement> that must be delegated to by that
     // DelegationTargetDescriptor
     this.typeToExecutablesMap =
         delegationTargetDescriptorList.stream()
             .map(
                 delegationTargetDescriptor ->
                     // create an entry mapping a DelegationTargetDescriptor to a
-                    // Set<ExecutableElement>
+                    // List<ExecutableElement>
                     new AbstractMap.SimpleEntry<>(
                         delegationTargetDescriptor,
                         elementUtils
@@ -78,12 +78,18 @@ final class AutoDelegateGenerator {
                                         || typeElementMember
                                             .getModifiers()
                                             .contains(Modifier.DEFAULT))
-                            // then, collect it into a Set<ExecutableElement> that the key
+                            // then, collect it into a List<ExecutableElement> that the key
                             // DelegationTargetDescriptor should delegate to
-                            .collect(Collectors.toSet())))
-            // finally, collect the Map entries into a map (how does Collectors.toMap() not alias
-            // Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)?!)
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                            .collect(Collectors.toList())))
+            // Preserve the declaration order of delegation targets when generating methods.
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (first, second) -> {
+                      throw new IllegalStateException("Duplicate delegation target");
+                    },
+                    LinkedHashMap::new));
   }
 
   JavaFile autoDelegate() {
@@ -128,7 +134,7 @@ final class AutoDelegateGenerator {
     // build the constructor and add it to the MethodSpec
     typeSpecBuilder.addMethod(constructorBuilder.build());
 
-    for (Map.Entry<DelegationTargetDescriptor, Set<ExecutableElement>> entry :
+    for (Map.Entry<DelegationTargetDescriptor, List<ExecutableElement>> entry :
         typeToExecutablesMap.entrySet()) {
       // generate the delegation methods to the abstract APIs we want auto-delegations for,
       // utilizing
@@ -146,12 +152,12 @@ final class AutoDelegateGenerator {
   }
 
   /**
-   * @return a {@link Set} of {@link MethodSpec}s that delegate to an inner composed implementation
+   * @return a {@link List} of {@link MethodSpec}s that delegate to an inner composed implementation
    *     of the {@link javax.lang.model.type.DeclaredType} for the corresponding {@link
    *     ExecutableElement} identified by the provided {@link String} field name
    */
-  private Set<MethodSpec> delegatingMethodSpecs(
-      final Set<ExecutableElement> apisToDelegate, final DelegationTargetDescriptor descriptor) {
+  private List<MethodSpec> delegatingMethodSpecs(
+      final List<ExecutableElement> apisToDelegate, final DelegationTargetDescriptor descriptor) {
     return apisToDelegate.stream()
         .map(
             executableElement -> {
@@ -182,6 +188,7 @@ final class AutoDelegateGenerator {
                           .build())
                   .build();
             })
-        .collect(Collectors.toSet());
+        .distinct()
+        .collect(Collectors.toList());
   }
 }
