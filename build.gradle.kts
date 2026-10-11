@@ -1,6 +1,6 @@
 plugins {
+    id("com.ryandens.delegation.publish") apply false
     id("com.diffplug.spotless") version "8.10.4"
-    id("com.netflix.nebula.publish-verification") apply false
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
@@ -48,4 +48,10 @@ subprojects {
             },
         )
     }
+}
+
+// Keep daemon criteria reproducible without provisioning a missing CI JDK.
+tasks.named<org.gradle.buildconfiguration.tasks.UpdateDaemonJvm>("updateDaemonJvm") {
+    languageVersion.set(JavaLanguageVersion.of(27))
+    toolchainDownloadUrls.empty()
 }

@@ -57,7 +57,7 @@ final class AutoDelegateProcessorTest {
               diagnostics,
               fileManager,
               null,
-              List.of("-d", directory.toString(), "-s", directory.toString()),
+              List.of("--release", "11", "-d", directory.toString(), "-s", directory.toString()),
               null,
               fileManager.getJavaFileObjects(source.toFile()));
       task.setProcessors(List.of(new AutoDelegateProcessor()));

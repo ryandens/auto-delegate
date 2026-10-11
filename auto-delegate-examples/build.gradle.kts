@@ -1,19 +1,16 @@
 plugins {
-    java
-}
-
-tasks.compileJava {
-    options.release.set(17)
+    id("com.ryandens.delegation.java-conventions")
+    id("com.ryandens.javaagent-test") version "0.12.2"
 }
 
 dependencies {
     compileOnly(project(":auto-delegate-annotations"))
     annotationProcessor(project(":auto-delegate-processor", "shadow"))
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockito:mockito-core:5.24.0")
+    testJavaagent("org.mockito:mockito-core")
 }
 
 tasks.test {
-    useJUnitPlatform()
+    // Mockito's agent appends to the bootstrap classpath, preventing class-data sharing.
+    jvmArgs("-Xshare:off")
 }
