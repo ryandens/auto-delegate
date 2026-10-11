@@ -67,8 +67,8 @@ op read 'op://VAULT/Maven Central/token password' | gh secret set MAVEN_CENTRAL_
 
 1. Set `version=X.Y.Z` in root `gradle.properties`, update the README dependency
    examples, and merge the change into `main` after validation passes. Choose an
-   unpublished version: `0.3.1` is retained from the existing build, not reserved
-   as a new release by this change.
+   unpublished version. The current project version is `0.4.0`; publishing
+   requires pushing the matching `0.4.0` tag.
 2. Tag the merged commit and push the tag:
 
    ```sh
