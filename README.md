@@ -167,7 +167,7 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 
 ### 👩‍💻 Development Requirements
 
-- JDK 17
+- JDK 27
 
 ### 🚀 Releasing
 
@@ -182,7 +182,11 @@ diagnostic task of the `io.github.gradle-nexus.publish-plugin`
 
 Run `./gradlew build :build-logic:check --warning-mode fail` to build and test all
 modules and validate the convention plugins. The `build-logic` included build
-provides shared publishing and Java/JUnit conventions; no `buildSrc` is required.
+provides shared formatting, metadata, publishing, and Java/JUnit conventions.
+Dependency versions live in `gradle/libs.versions.toml`, shared with `build-logic`;
+dependency repositories are declared in each build's settings. No `buildSrc` is required.
+The build-logic checks include TestKit coverage for publishing artifacts, plugin
+application order, configuration-cache reuse, and build-cache reuse.
 Install JDK 27 before building. The Gradle daemon and compilation use JDK 27
 through toolchains, with automatic JDK downloads disabled so missing local or CI
 setup fails explicitly. CI installs Temurin 27 through `actions/setup-java`.
