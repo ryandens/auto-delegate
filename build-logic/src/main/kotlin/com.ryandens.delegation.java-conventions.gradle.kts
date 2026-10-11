@@ -1,9 +1,30 @@
+import nebula.plugin.contacts.Contact
+import nebula.plugin.contacts.ContactsExtension
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
 plugins {
+    id("com.ryandens.delegation.base-conventions")
     java
 }
 
-repositories {
-    mavenCentral()
+group = "com.ryandens"
+version = "0.3.1"
+
+spotless {
+    java {
+        googleJavaFormat()
+    }
+}
+
+extensions.configure<ContactsExtension> {
+    addPerson(
+        "admin@ryandens.com",
+        delegateClosureOf<Contact> {
+            moniker("Ryan Dens")
+            role("owner")
+            github("ryandens")
+        },
+    )
 }
 
 java {
@@ -19,10 +40,12 @@ tasks.compileJava {
     options.release.set(11)
 }
 
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:6.1.3"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform(libs.findLibrary("junit-bom").orElseThrow()))
+    testImplementation(libs.findLibrary("junit-jupiter").orElseThrow())
+    testRuntimeOnly(libs.findLibrary("junit-platform-launcher").orElseThrow())
 }
 
 tasks.withType<Test>().configureEach {

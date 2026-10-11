@@ -1,6 +1,6 @@
 plugins {
     `kotlin-dsl`
-    id("com.diffplug.spotless") version "8.10.4"
+    alias(libs.plugins.spotless)
 }
 
 // Build plugins run on Gradle's Java 17+ API, independently of library bytecode.
@@ -14,15 +14,16 @@ kotlin {
     compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
 }
 
-repositories {
-    mavenCentral()
-    gradlePluginPortal()
-}
-
 dependencies {
-    implementation("com.netflix.nebula.maven-nebula-publish:com.netflix.nebula.maven-nebula-publish.gradle.plugin:23.1.0")
+    implementation(libs.nebula.publish.plugin)
     // Fixes the Gradle 10 findAll deprecation in the publishing plugin's transitive version.
-    implementation("com.netflix.nebula.info:com.netflix.nebula.info.gradle.plugin:16.3.0")
+    implementation(libs.nebula.info.plugin)
+    implementation(libs.spotless.plugin)
+    implementation(libs.nebula.contacts.plugin)
+    testImplementation(gradleTestKit())
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 gradlePlugin {
@@ -44,4 +45,8 @@ spotless {
         target("src/**/*.kt")
         ktlint()
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

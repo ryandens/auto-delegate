@@ -14,5 +14,12 @@ develocity {
     }
 }
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
 rootProject.name = "auto-delegate"
 include("auto-delegate-annotations", "auto-delegate-processor", "auto-delegate-examples")
