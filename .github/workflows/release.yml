@@ -1,0 +1,89 @@
+name: 🚀 Release
+
+on:
+  push:
+    tags: ['v*']
+  # Select an existing tag in the UI/CLI; branch dispatches are rejected.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-central-release
+  # Don't let a newer run interrupt an upload and leave a partial Sonatype deployment.
+  # Manual cancellation is still available in GitHub Actions.
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify release tag and version
+        run: python3 .github/scripts/verify-release.py
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
+        with:
+          distribution: temurin
+          java-version: 27
+      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+        with:
+          cache-disabled: true
+      - name: Validate modules and build logic
+        run: ./gradlew build :build-logic:check --warning-mode fail --no-build-cache --no-configuration-cache --no-scan
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: maven-central
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify release tag and version
+        run: python3 .github/scripts/verify-release.py
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
+        with:
+          distribution: temurin
+          java-version: 27
+      - uses: gradle/actions/setup-gradle@b9bee63ef481cc545e4517ec730544a4d8b1dfa0 # v6.4.0
+        with:
+          cache-disabled: true
+      - name: Build, sign, and release to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.MAVEN_CENTRAL_TOKEN_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.MAVEN_CENTRAL_TOKEN_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+        run: |
+          for name in ORG_GRADLE_PROJECT_sonatypeUsername ORG_GRADLE_PROJECT_sonatypePassword ORG_GRADLE_PROJECT_signingKey ORG_GRADLE_PROJECT_signingPassword; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing required secret for $name"
+              exit 1
+            fi
+          done
+          ./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository \
+            --warning-mode fail --no-build-cache --no-configuration-cache --no-scan
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub release after successful Central publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --generate-notes --title "$RELEASE_TAG"
+          fi

@@ -171,12 +171,12 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 
 ### 🚀 Releasing
 
-1. Make sure the `sonatypeUsername` and `sonatypePassword` properties are set.
-1. Make sure the `signing.keyId`, `signing.password`, and `signing.secretKeyRingFile` properties are set.
-1. `./gradlew build signNebulaPublication publishNebulaPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository`
+The project version lives in root `gradle.properties`. Push a matching `vX.Y.Z`
+tag from a commit on `main` to validate, sign, publish both library modules to
+Maven Central, and create a GitHub release.
 
-Note, the `stagingProfileId` set in the root `build.gradle.kts` was retrieved using the `retrieveSonatypeStagingProfile` 
-diagnostic task of the `io.github.gradle-nexus.publish-plugin`
+See [the release guide](docs/releasing.md) for the four GitHub environment secrets,
+Keybase/1Password setup, and recovery instructions.
 
 ## Building
 

@@ -7,9 +7,6 @@ plugins {
     java
 }
 
-group = "com.ryandens"
-version = "0.3.1"
-
 spotless {
     java {
         googleJavaFormat()
