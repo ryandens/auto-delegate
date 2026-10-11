@@ -49,3 +49,9 @@ subprojects {
         )
     }
 }
+
+// Keep daemon criteria reproducible without provisioning a missing CI JDK.
+tasks.named<org.gradle.buildconfiguration.tasks.UpdateDaemonJvm>("updateDaemonJvm") {
+    languageVersion.set(JavaLanguageVersion.of(27))
+    toolchainDownloadUrls.empty()
+}

@@ -1,5 +1,3 @@
-import org.gradle.api.attributes.java.TargetJvmVersion
-
 plugins {
     java
 }
@@ -13,18 +11,12 @@ java {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(11)
     options.encoding = "UTF-8"
 }
 
-// Tests emit Java 11 bytecode but run on the toolchain JVM, allowing JUnit 6's Java 17+ runtime.
-listOf("testCompileClasspath", "testRuntimeClasspath").forEach { name ->
-    configurations.named(name) {
-        attributes.attributeProvider(
-            TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
-            java.toolchain.languageVersion.map { it.asInt() },
-        )
-    }
+// Production artifacts target Java 11; tests use the JDK 27 toolchain defaults.
+tasks.compileJava {
+    options.release.set(11)
 }
 
 dependencies {

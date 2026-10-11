@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,41 +16,39 @@ final class AutoDelegateProcessorTest {
   @TempDir Path directory;
 
   @Test
-  @SuppressWarnings("java:S6204") // Stream.toList() is unavailable with --release 11.
   void generatesMethodsInInterfaceAndMethodDeclarationOrder() throws Exception {
     final var source = directory.resolve("Example.java");
-    // Text blocks require Java 15; the test sources also compile with --release 11.
     Files.writeString(
         source,
-        String.join(
-            "\n",
-            "package example;",
-            "",
-            "import com.ryandens.delegation.AutoDelegate;",
-            "",
-            "interface First {",
-            "  void zebra();",
-            "  default int middle() { return 1; }",
-            "  void alpha();",
-            "  void alpha(int value);",
-            "  static void ignored() {}",
-            "}",
-            "",
-            "interface Left {",
-            "  void shared();",
-            "}",
-            "",
-            "interface Right {",
-            "  void shared();",
-            "}",
-            "",
-            "interface Second extends Left, Right {",
-            "  void yellow();",
-            "  void beta();",
-            "}",
-            "",
-            "@AutoDelegate(to = {Second.class, First.class})",
-            "abstract class Example implements First, Second {}"));
+        """
+        package example;
+
+        import com.ryandens.delegation.AutoDelegate;
+
+        interface First {
+          void zebra();
+          default int middle() { return 1; }
+          void alpha();
+          void alpha(int value);
+          static void ignored() {}
+        }
+
+        interface Left {
+          void shared();
+        }
+
+        interface Right {
+          void shared();
+        }
+
+        interface Second extends Left, Right {
+          void yellow();
+          void beta();
+        }
+
+        @AutoDelegate(to = {Second.class, First.class})
+        abstract class Example implements First, Second {}
+        """);
     final var compiler = ToolProvider.getSystemJavaCompiler();
     final var diagnostics = new StringWriter();
     try (final var fileManager = compiler.getStandardFileManager(null, null, null)) {
@@ -73,7 +70,7 @@ final class AutoDelegateProcessorTest {
             .matcher(generated)
             .results()
             .map(match -> match.group(1))
-            .collect(Collectors.toList());
+            .toList();
     assertEquals(
         List.of(
             "zebra()", "middle()", "alpha()", "alpha(int value)", "shared()", "yellow()", "beta()"),

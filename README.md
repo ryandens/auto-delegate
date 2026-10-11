@@ -183,13 +183,17 @@ diagnostic task of the `io.github.gradle-nexus.publish-plugin`
 Run `./gradlew build :build-logic:check --warning-mode fail` to build and test all
 modules and validate the convention plugins. The `build-logic` included build
 provides shared publishing and Java/JUnit conventions; no `buildSrc` is required.
-The Gradle daemon and Java convention use JDK 27 toolchains (downloaded
-automatically when needed). All Java modules, including examples and tests,
-compile with `--release 11`. Tests run on JDK 27, as JUnit 6 requires Java 17 or
-newer at runtime. JUnit dependencies are aligned through the JUnit BOM.
+Install JDK 27 before building. The Gradle daemon and compilation use JDK 27
+through toolchains, with automatic JDK downloads disabled so missing local or CI
+setup fails explicitly. CI installs Temurin 27 through `actions/setup-java`.
+Production code (including examples) compiles with `--release 11`; tests compile
+and run on JDK 27 using the toolchain defaults. JUnit dependencies are aligned
+through the JUnit BOM. The processor test also verifies generated code with
+`--release 11`.
 The included build also compiles with JDK 27, targeting Java 17 for Gradle plugin
 compatibility because the bundled Kotlin compiler cannot emit Java 27 bytecode.
-Regenerate daemon provisioning URLs with `./gradlew updateDaemonJvm --jvm-version=27`.
+Regenerate daemon criteria with `./gradlew updateDaemonJvm`; no download URLs
+are generated.
 
 Develocity publishes build scans automatically when `CI=true`. For a local scan,
 run `./gradlew build --scan`; use `--no-scan` to skip publication. Scans are
