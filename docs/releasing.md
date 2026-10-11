@@ -15,7 +15,7 @@ build behavior; `gradle/libs.versions.toml` owns dependency versions.
    These are token credentials, never your Sonatype account password.
    Old OSSRH credentials and the old numeric staging profile are no longer used.
 2. Create a GitHub Actions environment named `maven-central`. Limit deployments
-   to tags matching `v*`. Optionally add a required reviewer. Protect `main` with
+   to tags matching `[0-9]*.[0-9]*.[0-9]*`. Optionally add a required reviewer. Protect `main` with
    the Validate workflow and use a tag ruleset to restrict creating/updating
    release tags to maintainers.
 3. Add these **environment secrets** (no repository variables are required):
@@ -74,8 +74,8 @@ op read 'op://VAULT/Maven Central/token password' | gh secret set MAVEN_CENTRAL_
    ```sh
    git switch main
    git pull --ff-only
-   git tag -a vX.Y.Z -m 'Release X.Y.Z'
-   git push origin vX.Y.Z
+   git tag -a X.Y.Z -m 'Release X.Y.Z'
+   git push origin X.Y.Z
    ```
 
 3. The Release workflow verifies the tag matches the committed version and that
@@ -92,7 +92,7 @@ serialized and an active publication is never automatically cancelled by a newer
 run, since interrupting an upload can leave a partial Sonatype deployment. You
 can still cancel a run manually in GitHub Actions; inspect Central before retrying.
 
-The workflow deliberately accepts only stable `vMAJOR.MINOR.PATCH` tags.
+The workflow deliberately accepts only stable `MAJOR.MINOR.PATCH` tags.
 Snapshot and prerelease publishing are not enabled. You can keep a
 `X.Y.Z-SNAPSHOT` version on `main` between releases; change it to a stable version
 before tagging.
@@ -110,9 +110,20 @@ before tagging.
   the successful Maven publication. The GitHub release step tolerates an
   existing release.
 - Manual dispatch is available for an existing tag (`gh workflow run release.yml
-  --ref vX.Y.Z`); it reruns publication, so use it only after checking Central.
+  --ref X.Y.Z`); it reruns publication, so use it only after checking Central.
   Branch dispatches fail validation.
 
 The existing Nexus publishing plugin uses Sonatype's documented
 [Central compatibility endpoint](https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#getting-started-for-nexus-repository-manager-2-api-plugins).
 It handles the staging lifecycle; no additional manual upload API call is needed.
+
+The `ossrh-staging-api.central.sonatype.com/service/local/` URL publishes releases
+to Maven Central through the Central Publisher Portal's compatibility service.
+The `central.sonatype.com/repository/maven-snapshots/` URL is its separate snapshot
+repository; the stable-only release workflow does not use it.
+
+The previous numeric `stagingProfileId` was configured for the retired OSSRH
+service. It is omitted so the Nexus plugin can discover the profile for
+`packageGroup = com.ryandens` from the new service using the Portal token.
+An explicit profile ID is an optional optimization, not a requirement; see the
+[plugin's profile discovery documentation](https://github.com/gradle-nexus/publish-plugin#behind-the-scenes).

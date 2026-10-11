@@ -171,7 +171,7 @@ APIs where appropriate, only overriding methods that are relevant to the impleme
 
 ### 🚀 Releasing
 
-The project version lives in root `gradle.properties`. Push a matching `vX.Y.Z`
+The project version lives in root `gradle.properties`. Push a matching `X.Y.Z`
 tag from a commit on `main` to validate, sign, publish both library modules to
 Maven Central, and create a GitHub release.
 
