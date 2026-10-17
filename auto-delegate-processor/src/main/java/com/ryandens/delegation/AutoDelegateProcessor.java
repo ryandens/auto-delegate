@@ -22,6 +22,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -94,6 +95,8 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       final var apisToDelegate =
           valueToDelegateField != null ? List.of(valueToDelegateField) : toDelegateSetField;
 
+      validateInterfaceTargets(apisToDelegate);
+
       // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
       // interface that is also specified as a delegation target via the AutoDelegate
       // annotation
@@ -164,6 +167,28 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
     // always return false because we don't want to forbid other annotation processors from
     // operating on this type.
     return false;
+  }
+
+  private static void validateInterfaceTargets(final List<Element> apisToDelegate) {
+    // Class targets are deliberately unsupported, including abstract classes designed for
+    // subclassing. A wrapper would inherit implementation and potentially state in addition to
+    // holding a separate delegate. Running concrete methods on the wrapper versus forwarding
+    // them to the delegate can produce different behavior, while final methods cannot be
+    // forwarded and superclass constructors introduce separate initialization requirements.
+    // These choices depend on the target's contract and cannot be inferred from its signatures.
+    // Manually written delegation lets the author explicitly decide how to handle each target's
+    // state, initialization, and concrete methods. Keep generated delegation at interface
+    // boundaries rather than making those decisions implicitly.
+    for (final var apiToDelegate : apisToDelegate) {
+      if (apiToDelegate.getKind() != ElementKind.INTERFACE) {
+        throw new IllegalArgumentException(
+            "@AutoDelegate only supports interface targets; "
+                + apiToDelegate
+                + " is not an interface. Class targets (including abstract classes) are"
+                + " deliberately unsupported. Write delegation manually to make decisions"
+                + " about state, initialization, and concrete methods explicit.");
+      }
+    }
   }
 
   @Override

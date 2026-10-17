@@ -1,6 +1,9 @@
 package com.ryandens.delegation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringWriter;
@@ -14,6 +17,51 @@ import org.junit.jupiter.api.io.TempDir;
 
 final class AutoDelegateProcessorTest {
   @TempDir Path directory;
+
+  @Test
+  void failsProcessorForClassTargetsInBothAnnotationForms() throws Exception {
+    for (final var annotation :
+        List.of(
+            "@AutoDelegate(FileSystemProvider.class)",
+            "@AutoDelegate(to = {Runnable.class, FileSystemProvider.class})")) {
+      final var source = directory.resolve("Example.java");
+      Files.writeString(
+          source,
+          """
+          package example;
+
+          import com.ryandens.delegation.AutoDelegate;
+          import java.nio.file.spi.FileSystemProvider;
+
+          %s
+          abstract class Example implements Runnable {}
+          """
+              .formatted(annotation));
+      final var compiler = ToolProvider.getSystemJavaCompiler();
+      final var diagnostics = new StringWriter();
+      try (final var fileManager = compiler.getStandardFileManager(null, null, null)) {
+        final var task =
+            compiler.getTask(
+                diagnostics,
+                fileManager,
+                null,
+                List.of("--release", "11", "-d", directory.toString(), "-s", directory.toString()),
+                null,
+                fileManager.getJavaFileObjects(source.toFile()));
+        task.setProcessors(List.of(new AutoDelegateProcessor()));
+        final var failure = assertThrows(RuntimeException.class, task::call);
+        final var cause = assertInstanceOf(IllegalArgumentException.class, failure.getCause());
+        assertTrue(
+            cause
+                .getMessage()
+                .contains(
+                    "@AutoDelegate only supports interface targets; java.nio.file.spi.FileSystemProvider"),
+            cause.getMessage());
+        assertTrue(cause.getMessage().contains("Write delegation manually"), cause.getMessage());
+      }
+      assertFalse(Files.exists(directory.resolve("example/AutoDelegate_Example.java")));
+    }
+  }
 
   @Test
   void generatesMethodsInInterfaceAndMethodDeclarationOrder() throws Exception {
