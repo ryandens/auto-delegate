@@ -22,6 +22,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -29,6 +30,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 
 /**
  * Annotation processor that generates abstract classes that delegate to an inner composed
@@ -49,6 +51,7 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
 
   @Override
   public synchronized void init(final ProcessingEnvironment processingEnv) {
+    super.init(processingEnv);
     filer = processingEnv.getFiler();
     typeUtils = processingEnv.getTypeUtils();
     elementUtils = processingEnv.getElementUtils();
@@ -93,6 +96,37 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       // whether we are delegating to one inner composed instance or multiple.
       final var apisToDelegate =
           valueToDelegateField != null ? List.of(valueToDelegateField) : toDelegateSetField;
+
+      // Class targets are deliberately unsupported, including abstract classes designed for
+      // subclassing. A wrapper would inherit implementation and potentially state in addition to
+      // holding a separate delegate. Running concrete methods on the wrapper versus forwarding
+      // them to the delegate can produce different behavior, while final methods cannot be
+      // forwarded and superclass constructors introduce separate initialization requirements.
+      // These choices depend on the target's contract and cannot be inferred from its signatures.
+      // Manually written delegation lets the author explicitly decide how to handle each target's
+      // state, initialization, and concrete methods. Keep generated delegation at interface
+      // boundaries rather than making those decisions implicitly.
+      var unsupportedTarget = false;
+      for (final var apiToDelegate : apisToDelegate) {
+        if (apiToDelegate.getKind() != ElementKind.INTERFACE) {
+          processingEnv
+              .getMessager()
+              .printMessage(
+                  Diagnostic.Kind.ERROR,
+                  "@AutoDelegate only supports interface targets; "
+                      + apiToDelegate
+                      + " is not an interface. Class targets (including abstract classes) are"
+                      + " deliberately unsupported: inherited state, constructors, and concrete"
+                      + " or final methods require target-specific decisions. Write delegation"
+                      + " manually to make those decisions explicit.",
+                  element,
+                  annotationMirror);
+          unsupportedTarget = true;
+        }
+      }
+      if (unsupportedTarget) {
+        continue;
+      }
 
       // from the Element annotated with AutoDelegate, get their declared interfaces. Find the
       // interface that is also specified as a delegation target via the AutoDelegate
