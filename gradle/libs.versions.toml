@@ -21,4 +21,4 @@ spotless-plugin = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 nexus-publish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
-javaagent-test = { id = "com.ryandens.javaagent-test", version = "0.12.2" }
+javaagent-test = { id = "com.ryandens.javaagent-test", version = "0.13.0" }
