@@ -13,7 +13,7 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mockito-core = { module = "org.mockito:mockito-core", version = "5.24.0" }
-nebula-publish-plugin = { module = "com.netflix.nebula.maven-nebula-publish:com.netflix.nebula.maven-nebula-publish.gradle.plugin", version = "23.1.0" }
+nebula-publish-plugin = { module = "com.netflix.nebula.maven-nebula-publish:com.netflix.nebula.maven-nebula-publish.gradle.plugin", version = "23.2.0" }
 nebula-info-plugin = { module = "com.netflix.nebula.info:com.netflix.nebula.info.gradle.plugin", version = "16.3.0" }
 spotless-plugin = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin", version.ref = "spotless" }
 
