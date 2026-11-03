@@ -1,9 +1,7 @@
 plugins {
-    id("com.ryandens.delegation.java-conventions")
-    `java-library`
     alias(libs.plugins.shadow)
     id("com.netflix.nebula.maven-shadow-publish")
-    id("com.ryandens.delegation.publish")
+    id("com.ryandens.delegation.library-conventions")
 }
 
 description =

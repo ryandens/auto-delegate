@@ -1,8 +1,18 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        gradlePluginPortal()
-        mavenCentral()
+        gradlePluginPortal {
+            content {
+                includeGroupByRegex("com\\.netflix\\.nebula(\\..*)?")
+                includeGroup("com.diffplug.spotless")
+            }
+        }
+        mavenCentral {
+            content {
+                excludeGroupByRegex("com\\.netflix\\.nebula(\\..*)?")
+                excludeGroup("com.diffplug.spotless")
+            }
+        }
     }
     versionCatalogs {
         create("libs") {

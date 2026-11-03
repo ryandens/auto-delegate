@@ -1,7 +1,5 @@
 plugins {
-    id("com.ryandens.delegation.java-conventions")
-    `java-library`
-    id("com.ryandens.delegation.publish")
+    id("com.ryandens.delegation.library-conventions")
 }
 
 description =
