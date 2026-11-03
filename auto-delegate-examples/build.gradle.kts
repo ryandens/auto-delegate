@@ -5,7 +5,11 @@ plugins {
 
 dependencies {
     compileOnly(project(":auto-delegate-annotations"))
-    annotationProcessor(project(":auto-delegate-processor", "shadow"))
+    annotationProcessor(project(":auto-delegate-processor")) {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
+        }
+    }
     testImplementation(libs.mockito.core)
     testJavaagent(libs.mockito.core)
 }
