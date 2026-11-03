@@ -54,33 +54,28 @@ final class AutoDelegateGenerator {
     // DelegationTargetDescriptor
     this.typeToExecutablesMap =
         delegationTargetDescriptorList.stream()
-            .map(
-                delegationTargetDescriptor ->
-                    // create an entry mapping a DelegationTargetDescriptor to a
-                    // List<ExecutableElement>
-                    new AbstractMap.SimpleEntry<>(
-                        delegationTargetDescriptor,
-                        elementUtils
-                            // first get all the members for the delegation target
-                            .getAllMembers(
-                                (TypeElement) delegationTargetDescriptor.declaredType().asElement())
-                            .stream()
-                            // then, reduce it to only ExecutableElements
-                            .filter(
-                                typeElementMember -> typeElementMember instanceof ExecutableElement)
-                            // then, map the members to the required type we reduced the stream to
-                            .map(typeElementMember -> (ExecutableElement) typeElementMember)
-                            // then, reduce it to the abstract APIs that we're interested in
-                            // auto-delegating to
-                            .filter(
-                                typeElementMember ->
-                                    typeElementMember.getModifiers().contains(Modifier.ABSTRACT)
-                                        || typeElementMember
-                                            .getModifiers()
-                                            .contains(Modifier.DEFAULT))
-                            // then, collect it into a List<ExecutableElement> that the key
-                            // DelegationTargetDescriptor should delegate to
-                            .collect(Collectors.toList())))
+            .map(delegationTargetDescriptor ->
+                // create an entry mapping a DelegationTargetDescriptor to a
+                // List<ExecutableElement>
+                new AbstractMap.SimpleEntry<>(
+                    delegationTargetDescriptor,
+                    elementUtils
+                        // first get all the members for the delegation target
+                        .getAllMembers(
+                            (TypeElement) delegationTargetDescriptor.declaredType().asElement())
+                        .stream()
+                        // then, reduce it to only ExecutableElements
+                        .filter(typeElementMember -> typeElementMember instanceof ExecutableElement)
+                        // then, map the members to the required type we reduced the stream to
+                        .map(typeElementMember -> (ExecutableElement) typeElementMember)
+                        // then, reduce it to the abstract APIs that we're interested in
+                        // auto-delegating to
+                        .filter(typeElementMember ->
+                            typeElementMember.getModifiers().contains(Modifier.ABSTRACT)
+                                || typeElementMember.getModifiers().contains(Modifier.DEFAULT))
+                        // then, collect it into a List<ExecutableElement> that the key
+                        // DelegationTargetDescriptor should delegate to
+                        .collect(Collectors.toList())))
             // Preserve the declaration order of delegation targets when generating methods.
             .collect(
                 Collectors.toMap(
@@ -159,35 +154,34 @@ final class AutoDelegateGenerator {
   private List<MethodSpec> delegatingMethodSpecs(
       final List<ExecutableElement> apisToDelegate, final DelegationTargetDescriptor descriptor) {
     return apisToDelegate.stream()
-        .map(
-            executableElement -> {
-              final var parameters =
-                  executableElement.getParameters().stream()
-                      .map(parameter -> parameter.getSimpleName().toString())
-                      .reduce((s, s2) -> s + "," + s2)
-                      .orElse("");
+        .map(executableElement -> {
+          final var parameters =
+              executableElement.getParameters().stream()
+                  .map(parameter -> parameter.getSimpleName().toString())
+                  .reduce((s, s2) -> s + "," + s2)
+                  .orElse("");
 
-              final String returnPrefix;
-              if (TypeKind.VOID.equals(executableElement.getReturnType().getKind())) {
-                returnPrefix = "";
-              } else {
-                returnPrefix = "return ";
-              }
+          final String returnPrefix;
+          if (TypeKind.VOID.equals(executableElement.getReturnType().getKind())) {
+            returnPrefix = "";
+          } else {
+            returnPrefix = "return ";
+          }
 
-              return MethodSpec.overriding(executableElement, descriptor.declaredType(), typeUtils)
-                  .addCode(
-                      CodeBlock.builder()
-                          .addStatement(
-                              returnPrefix
-                                  + descriptor.fieldName()
-                                  + "."
-                                  + executableElement.getSimpleName().toString()
-                                  + "("
-                                  + parameters
-                                  + ")")
-                          .build())
-                  .build();
-            })
+          return MethodSpec.overriding(executableElement, descriptor.declaredType(), typeUtils)
+              .addCode(
+                  CodeBlock.builder()
+                      .addStatement(
+                          returnPrefix
+                              + descriptor.fieldName()
+                              + "."
+                              + executableElement.getSimpleName().toString()
+                              + "("
+                              + parameters
+                              + ")")
+                      .build())
+              .build();
+        })
         .distinct()
         .collect(Collectors.toList());
   }

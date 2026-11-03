@@ -69,10 +69,9 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
       final var annotationMirror =
           MoreElements.getAnnotationMirror(element, AutoDelegate.class)
               .toJavaUtil()
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "element should always be annotated with AutoDelegate"));
+              .orElseThrow(() ->
+                  new IllegalStateException(
+                      "element should always be annotated with AutoDelegate"));
       // From the AnnotationMirror, get the value of AutoDelegate#value and translate it
       // into an Element
       final var valueToDelegateField = getInterfaceToDelegateAsElement(annotationMirror);
@@ -104,14 +103,12 @@ public final class AutoDelegateProcessor extends AbstractProcessor {
           (((TypeElement) element)
               .getInterfaces().stream()
                   // also check supertypes
-                  .flatMap(
-                      declaredType ->
-                          Stream.concat(
-                              Stream.of(declaredType),
-                              typeUtils.directSupertypes(declaredType).stream()
-                                  .filter(
-                                      typeMirror ->
-                                          typeMirror.getKind().equals(TypeKind.DECLARED))))
+                  .flatMap(declaredType ->
+                      Stream.concat(
+                          Stream.of(declaredType),
+                          typeUtils.directSupertypes(declaredType).stream()
+                              .filter(
+                                  typeMirror -> typeMirror.getKind().equals(TypeKind.DECLARED))))
                   .map(typeMirror -> (DeclaredType) typeMirror)
                   .filter(declaredType -> apisToDelegate.contains(declaredType.asElement()))
                   .collect(Collectors.toList()));
