@@ -77,47 +77,24 @@ jobs:
           expected = root / "caches" / "build-cache-1" / "2d9acf90d4c8dea19fe2bc0bbd6e2e3a"
           print("Previous PR processor test key present:", expected.exists())
 
-      - name: Install fingerprint observer
-        shell: bash
-        run: |
-          cat > "$RUNNER_TEMP/testlens-fingerprints.init.gradle" <<'STUDY_EOF'
-          import org.gradle.internal.operations.*
-          import org.gradle.api.internal.tasks.SnapshotTaskInputsBuildOperationType
-          import org.gradle.api.internal.tasks.execution.ExecuteTaskBuildOperationType
-          import groovy.json.JsonOutput
-          import java.util.concurrent.ConcurrentHashMap
-          
-          gradle.services.get(BuildOperationListenerManager).addListener(new BuildOperationListener() {
-              final Map paths = new ConcurrentHashMap()
-              void started(BuildOperationDescriptor operation, OperationStartEvent event) {
-                  def path = operation.details instanceof ExecuteTaskBuildOperationType.Details ? operation.details.taskPath : (operation.parentId == null ? null : paths.get(operation.parentId))
-                  if (path != null) paths.put(operation.id, path)
-              }
-              void progress(OperationIdentifier id, OperationProgressEvent event) {}
-              void finished(BuildOperationDescriptor operation, OperationFinishEvent event) {
-                  def path = paths.remove(operation.id)
-                  def r = event.result
-                  if (path == ':auto-delegate-processor:test' && r instanceof SnapshotTaskInputsBuildOperationType.Result) {
-                      def files = [:]
-                      def noop = { Object state -> }
-                      r.visitInputFileProperties([
-                          preProperty: { state -> files[state.propertyName] = state.propertyHashBytes?.encodeHex()?.toString() },
-                          preRoot: noop, preDirectory: noop, file: noop,
-                          postDirectory: {}, postRoot: {}, postProperty: {}
-                      ] as SnapshotTaskInputsBuildOperationType.Result.InputFilePropertyVisitor)
-                      println 'STUDY_FINGERPRINT ' + JsonOutput.toJson([
-                          key: r.hashBytes?.encodeHex()?.toString(),
-                          classLoader: r.classLoaderHashBytes?.encodeHex()?.toString(),
-                          actionClasses: r.actionClassNames,
-                          actionClassLoaders: r.actionClassLoaderHashesBytes?.collect { it?.encodeHex()?.toString() },
-                          values: r.inputValueHashesBytes?.collectEntries { k, v -> [(k): v?.encodeHex()?.toString()] },
-                          files: files,
-                          outputs: r.outputPropertyNames
-                      ])
-                  }
-              }
-          })
-          STUDY_EOF
-
       - name: Execute Gradle build
-        run: ./gradlew build :build-logic:check --warning-mode fail --init-script "$RUNNER_TEMP/testlens-fingerprints.init.gradle"
+        run: ./gradlew build :build-logic:check --warning-mode fail -Dorg.gradle.internal.operations.trace="$RUNNER_TEMP/testlens-operation"
+
+      - name: Read native fingerprint trace
+        if: always()
+        shell: python
+        run: |
+          import json
+          import os
+          import pathlib
+          trace = pathlib.Path(os.environ["RUNNER_TEMP"]) / "testlens-operation-log.txt"
+          operations = {}
+          if trace.exists():
+              for line in trace.open():
+                  event = json.loads(line)
+                  if "displayName" in event:
+                      operations[event["id"]] = event
+                  elif "result" in event:
+                      operation = operations.get(event["id"], {})
+                      if operation.get("displayName") == "Snapshot task inputs for :auto-delegate-processor:test":
+                          print("NATIVE_FINGERPRINT " + json.dumps(event["result"], sort_keys=True))
