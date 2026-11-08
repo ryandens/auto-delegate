@@ -33,6 +33,8 @@ class AutoDelegatePublishingPlugin : Plugin<Project> {
 
         // sign the publication produced by the Nebula MavenPublishPlugin
         target.configure<SigningExtension> {
+            // This API requires concrete strings before Gradle snapshots signing inputs.
+            // Keep these tracked configuration inputs here; doFirst is too late for Sign.
             val signingKey = target.providers.gradleProperty("signingKey").orNull
             if (signingKey != null) {
                 useInMemoryPgpKeys(

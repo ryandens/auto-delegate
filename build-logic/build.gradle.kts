@@ -1,5 +1,6 @@
 plugins {
     `kotlin-dsl`
+    id("com.ryandens.delegation.test-conventions")
     alias(libs.plugins.spotless)
 }
 
@@ -20,10 +21,14 @@ dependencies {
     implementation(libs.nebula.info.plugin)
     implementation(libs.spotless.plugin)
     implementation(libs.nebula.contacts.plugin)
+    implementation("com.ryandens.delegation:test-conventions")
     testImplementation(gradleTestKit())
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
-    testRuntimeOnly(libs.junit.platform.launcher)
+    // Generate and verify ephemeral signing keys with the PGP implementation shipped by Gradle.
+    testImplementation(
+        fileTree(gradle.gradleHomeDir!!.resolve("lib/plugins")) {
+            include("bcpg-*.jar", "bcprov-*.jar", "bcutil-*.jar")
+        },
+    )
 }
 
 gradlePlugin {
@@ -45,8 +50,4 @@ spotless {
         target("src/**/*.kt")
         ktlint()
     }
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
