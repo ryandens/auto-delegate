@@ -51,5 +51,29 @@ jobs:
           use-oidc: true
           github-token: ''
 
+      - name: Inspect restored processor test cache
+        shell: python
+        run: |
+          import os
+          import pathlib
+          import tarfile
+          root = pathlib.Path(os.environ.get("GRADLE_USER_HOME", pathlib.Path.home() / ".gradle"))
+          for cache in root.glob("caches/build-cache-*"):
+              if not cache.is_dir():
+                  continue
+              for entry in sorted(cache.iterdir()):
+                  if not entry.is_file() or len(entry.name) != 32:
+                      continue
+                  try:
+                      with tarfile.open(entry) as archive:
+                          metadata = archive.extractfile("METADATA").read().decode()
+                      if "auto-delegate-processor" in metadata and "test" in metadata:
+                          fields = [line for line in metadata.splitlines() if line.startswith(("identity=", "buildCacheKey=", "buildInvocationId="))]
+                          print(entry.name, *fields, sep="\n")
+                  except (tarfile.TarError, KeyError, UnicodeError, OSError):
+                      continue
+          expected = root / "caches" / "build-cache-1" / "2d9acf90d4c8dea19fe2bc0bbd6e2e3a"
+          print("Previous PR processor test key present:", expected.exists())
+
       - name: Execute Gradle build
-        run: ./gradlew build :build-logic:check --warning-mode fail
+        run: ./gradlew build :build-logic:check --warning-mode fail --info -Dorg.gradle.caching.debug=true
