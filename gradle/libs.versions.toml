@@ -14,7 +14,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mockito-core = { module = "org.mockito:mockito-core", version = "5.24.0" }
 nebula-publish-plugin = { module = "com.netflix.nebula.maven-nebula-publish:com.netflix.nebula.maven-nebula-publish.gradle.plugin", version = "24.0.0" }
-nebula-info-plugin = { module = "com.netflix.nebula.info:com.netflix.nebula.info.gradle.plugin", version = "16.3.0" }
+nebula-info-plugin = { module = "com.netflix.nebula.info:com.netflix.nebula.info.gradle.plugin", version = "17.1.1" }
 spotless-plugin = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin", version.ref = "spotless" }
 
 [plugins]
